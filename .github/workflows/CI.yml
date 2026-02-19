@@ -24,4 +24,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/lu2ky/webhe:latest
+          tags: ghcr.io/lu2ky/apigohe:latest
