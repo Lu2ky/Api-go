@@ -13,7 +13,7 @@ import (
 )
 
 var db *sql.DB
-
+//Pruebita
 /* Saving the session of MySQL, this is global for the access in all methods */
 
 type User struct {
