@@ -133,6 +133,7 @@ func main() {
 	router.POST("/updateEndHourOfPersonalScheduleByIdCourse", updateEndHourOfPersonalScheduleByIdCourse)
 	router.POST("/deleteOrRecoveryPersonalScheduleByIdCourse", deleteOrRecoveryPersonalScheduleByIdCourse)
 	router.POST("/addPersonalActivity", addPersonalActivity)
+	router.POST("/addPersonalComment", addPersonalComment)
 	router.Run("0.0.0.0:3913") // The port number for expone the API
 }
 func method(c *gin.Context) {}
@@ -467,7 +468,7 @@ func addPersonalActivity(c *gin.Context) {
 		"message": "Actividad creada correctamente",
 	})
 }
-func addPersonalCommentary(c *gin.Context) {
+func addPersonalComment(c *gin.Context) {
 	var newComment new_ofcComments
 	err := c.BindJSON(&newComment)
 	if err != nil {
