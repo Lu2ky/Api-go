@@ -68,6 +68,21 @@ type NewPersonalActivity struct {
 	N_iduser          int    `json:"N_iduser"`
 	Id_AcademicPeriod int    `json:"Id_AcademicPeriod"`
 }
+type ofcComments struct {
+	N_idHorario  int           `json:"N_idHorario"`
+	N_idUsuario  int           `json:"N_idUsuario"`
+	N_idCurso    int           `json:"N_idCurso"`
+	Curso        string        `json:"Curso"`
+	T_comentario string        `json:"T_comentario"`
+	B_isDeleted  *sql.NullBool `json:"B_isDeleted"`
+}
+type new_ofcComments struct {
+	N_idHorario  int    `json:"N_idHorario"`
+	N_idUsuario  int    `json:"N_idUsuario"`
+	N_idCurso    int    `json:"N_idCurso"`
+	Curso        string `json:"Curso"`
+	T_comentario string `json:"T_comentario"`
+}
 
 func apiKeyAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -111,6 +126,7 @@ func main() {
 	router.Use(apiKeyAuth())
 	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
 	router.GET("/GetPersonalScheduleByUserId/:id", getPersonalScheduleByUserId)
+	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserIdAndCourseId)
 	router.POST("/updateNameOfPersonalScheduleByIdCourse", updateNameOfPersonalScheduleByIdCourse)
 	router.POST("/updateDescriptionOfPersonalScheduleByIdCourse", updateDescriptionOfPersonalScheduleByIdCourse)
 	router.POST("/updateStartHourOfPersonalScheduleByIdCourse", updateStartHourOfPersonalScheduleByIdCourse)
@@ -213,6 +229,42 @@ func getPersonalScheduleByUserId(c *gin.Context) {
 
 	}
 	c.JSON(200, perschedules)
+}
+
+func getPersonalCommentsByUserIdAndCourseId(c *gin.Context) {
+	id_User := c.Param("id")
+	rows, err := db.Query(`SELECT * FROM ComentariosOficiales WHERE N_idUsuario=(SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario=?);`, id_User)
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	defer rows.Close()
+	var ofcCommentsArray []ofcComments
+	for rows.Next() {
+		var ofcComment ofcComments
+		err := rows.Scan(
+			&ofcComment.N_idHorario,
+			&ofcComment.N_idUsuario,
+			&ofcComment.N_idCurso,
+			&ofcComment.Curso,
+			&ofcComment.T_comentario,
+			&ofcComment.B_isDeleted,
+		)
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+		ofcCommentsArray = append(ofcCommentsArray, ofcComment)
+	}
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	c.JSON(200, ofcCommentsArray)
 }
 func updateNameOfPersonalScheduleByIdCourse(c *gin.Context) {
 	var newValue PersonalScheduleNewValue
@@ -413,5 +465,32 @@ func addPersonalActivity(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Actividad creada correctamente",
+	})
+}
+func addPersonalCommentary(c *gin.Context) {
+	var newComment new_ofcComments
+	err := c.BindJSON(&newComment)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	result, err := db.Exec(
+		"INSERT INTO Comentarios (N_idHorario, N_idUsuario, N_idCurso, T_comentario) VALUES (?, ?, ?, ?)",
+		newComment.N_idHorario,
+		newComment.N_idUsuario,
+		newComment.N_idCurso,
+		newComment.T_comentario,
+	)
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	c.JSON(200, gin.H{
+		"message":      "Comentario agregado correctamente",
+		"rowsAffected": rowsAffected,
 	})
 }
