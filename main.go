@@ -444,12 +444,11 @@ func addPersonalActivity(c *gin.Context) {
 		return
 	}
 	result0, err0 := tx.Exec(
-		"INSERT INTO Cursos (T_nombre, N_idEtiqueta, T_descripcion) VALUES (?, ?, ?);",
+		"INSERT INTO Cursos (T_nombre, N_idTipoCurso, T_descripcion) VALUES (?, ?, ?);",
 		newPerActivity.Activity,
 		newPerActivity.IdTag,
 		newPerActivity.Description,
 	)
-	
 
 	if err0 != nil {
 		tx.Rollback()
