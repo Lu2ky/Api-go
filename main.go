@@ -13,6 +13,7 @@ import (
 )
 
 var db *sql.DB
+
 //Pruebita
 /* Saving the session of MySQL, this is global for the access in all methods */
 
@@ -51,7 +52,7 @@ type PersonalSchedule struct {
 	IsDeleted   *sql.NullBool  `json:"IsDeleted"`
 }
 type Tags struct {
-	T_name    string            `json:"T_name"`
+	T_name string `json:"T_name"`
 }
 type PersonalScheduleNewValue struct {
 	NewActivityValue   string `json:"NewActivityValue" binding:"required"`
@@ -130,7 +131,7 @@ func main() {
 	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
 	router.GET("/GetPersonalScheduleByUserId/:id", getPersonalScheduleByUserId)
 	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserIdAndCourseId)
-	router.GET("/GetTags" , getTags)
+	router.GET("/GetTags", getTags)
 	router.POST("/updateNameOfPersonalScheduleByIdCourse", updateNameOfPersonalScheduleByIdCourse)
 	router.POST("/updateDescriptionOfPersonalScheduleByIdCourse", updateDescriptionOfPersonalScheduleByIdCourse)
 	router.POST("/updateStartHourOfPersonalScheduleByIdCourse", updateStartHourOfPersonalScheduleByIdCourse)
@@ -530,3 +531,5 @@ func addPersonalComment(c *gin.Context) {
 	})
 
 }
+
+// Last test for today :P -Luky (CI/CD test)
