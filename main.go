@@ -109,6 +109,8 @@ func apiKeyAuth() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+//test
 func main() {
 	err := godotenv.Load("../../config/goapiconfig.env") // Load enviorement variables
 	if err != nil {
