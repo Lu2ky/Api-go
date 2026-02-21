@@ -65,7 +65,7 @@ type forDeleteOrRecoveryPersonalSchedule struct {
 type NewPersonalActivity struct {
 	Activity          string `json:"Activity"`
 	Description       string `json:"Description"`
-	IdTag             int    `json:"IdTag"`
+	N_idTipoCurso             int    `json:"N_idTipoCurso"`
 	Day               int    `json:"Day"`
 	StartHour         string `json:"StartHour"`
 	EndHour           string `json:"EndHour"`
@@ -446,7 +446,7 @@ func addPersonalActivity(c *gin.Context) {
 	result0, err0 := tx.Exec(
 		"INSERT INTO Cursos (T_nombre, N_idTipoCurso, T_descripcion) VALUES (?, ?, ?);",
 		newPerActivity.Activity,
-		newPerActivity.IdTag,
+		newPerActivity.N_idTipoCurso,
 		newPerActivity.Description,
 	)
 
