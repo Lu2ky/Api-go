@@ -13,6 +13,7 @@ import (
 )
 
 var db *sql.DB
+
 //Pruebita
 /* Saving the session of MySQL, this is global for the access in all methods */
 
@@ -49,6 +50,9 @@ type PersonalSchedule struct {
 	StartHour   string         `json:"StartHour"`
 	EndHour     string         `json:"EndHour"`
 	IsDeleted   *sql.NullBool  `json:"IsDeleted"`
+}
+type Tags struct {
+	T_name string `json:"T_name"`
 }
 type PersonalScheduleNewValue struct {
 	NewActivityValue   string `json:"NewActivityValue" binding:"required"`
@@ -106,7 +110,7 @@ func apiKeyAuth() gin.HandlerFunc {
 	}
 }
 func main() {
-	err := godotenv.Load() // Load enviorement variables
+	err := godotenv.Load("../../config/goapiconfig.env") // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
@@ -127,6 +131,7 @@ func main() {
 	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
 	router.GET("/GetPersonalScheduleByUserId/:id", getPersonalScheduleByUserId)
 	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserIdAndCourseId)
+	router.GET("/GetTags", getTags)
 	router.POST("/updateNameOfPersonalScheduleByIdCourse", updateNameOfPersonalScheduleByIdCourse)
 	router.POST("/updateDescriptionOfPersonalScheduleByIdCourse", updateDescriptionOfPersonalScheduleByIdCourse)
 	router.POST("/updateStartHourOfPersonalScheduleByIdCourse", updateStartHourOfPersonalScheduleByIdCourse)
@@ -134,6 +139,7 @@ func main() {
 	router.POST("/deleteOrRecoveryPersonalScheduleByIdCourse", deleteOrRecoveryPersonalScheduleByIdCourse)
 	router.POST("/addPersonalActivity", addPersonalActivity)
 	router.POST("/addPersonalComment", addPersonalComment)
+
 	router.Run("0.0.0.0:3913") // The port number for expone the API
 }
 func method(c *gin.Context) {}
@@ -392,6 +398,35 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 		"rowsAffected": rowsAffected,
 	})
 }
+func getTags(c *gin.Context) {
+	rows, err := db.Query(`SELECT T_nombre FROM Etiquetas;`)
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	defer rows.Close()
+	var TagsArray []Tags
+	for rows.Next() {
+		var Tags Tags
+		err := rows.Scan(
+			&Tags.T_name,
+		)
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+		TagsArray = append(TagsArray, Tags)
+	}
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	c.JSON(200, TagsArray)
+}
 func addPersonalActivity(c *gin.Context) {
 	var newPerActivity NewPersonalActivity
 	err := c.BindJSON(&newPerActivity)
@@ -494,4 +529,7 @@ func addPersonalComment(c *gin.Context) {
 		"message":      "Comentario agregado correctamente",
 		"rowsAffected": rowsAffected,
 	})
+
 }
+
+// Last test for today :P -Luky (CI/CD test)
