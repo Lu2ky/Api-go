@@ -399,7 +399,7 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 	})
 }
 func getTags(c *gin.Context) {
-	rows, err := db.Query(`SELECT T_nombre FROM Etiquetas);`)
+	rows, err := db.Query(`SELECT T_nombre FROM Etiquetas;`)
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
