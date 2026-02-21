@@ -449,7 +449,7 @@ func addPersonalActivity(c *gin.Context) {
 		newPerActivity.IdTag,
 		newPerActivity.Description,
 	)
-	idCurso, _ := result0.LastInsertId()
+	
 
 	if err0 != nil {
 		tx.Rollback()
@@ -457,19 +457,21 @@ func addPersonalActivity(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Error en primer query"})
 		return
 	}
+	idCurso, _ := result0.LastInsertId()
 	result1, err1 := tx.Exec(
 		"INSERT INTO dias_clase(N_dia, TM_horaInicio, TM_horaFin) VALUES (?, ?, ?)",
 		newPerActivity.Day,
 		newPerActivity.StartHour,
 		newPerActivity.EndHour,
 	)
-	nIdDias, _ := result1.LastInsertId()
+	
 	if err1 != nil {
 		tx.Rollback()
 		log.Printf("Database error: %v", err1)
 		c.JSON(500, gin.H{"error": "Error en segunda query"})
 		return
 	}
+	nIdDias, _ := result1.LastInsertId()
 
 	_, err = tx.Exec(
 		"INSERT INTO Materia_has_dias_clase(N_idCurso, N_idDiasClase) VALUES (?, ?);",
