@@ -577,15 +577,15 @@ func addPersonalActivity(c *gin.Context) {
 
 	//	Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		newPerActivity.p_usuario,
-		newPerActivity.p_nombreCurso,
-		newPerActivity.p_descripcion,
-		newPerActivity.p_fechaInicio,
-		newPerActivity.p_fechaFin,
-		newPerActivity.p_dia,
-		newPerActivity.p_horaInicio,
-		newPerActivity.p_horaFin,
-		newPerActivity.p_hp_periodooraFin
+		newPerActivity.P_usuario,
+		newPerActivity.P_nombreCurso,
+		newPerActivity.P_descripcion,
+		newPerActivity.P_fechaInicio,
+		newPerActivity.P_fechaFin,
+		newPerActivity.P_dia,
+		newPerActivity.P_horaInicio,
+		newPerActivity.P_horaFin,
+		newPerActivity.P_periodo,
 	)
 
 	if err != nil {
@@ -697,77 +697,80 @@ func addPersonalComment(c *gin.Context) {
 		"rowsAffected": rowsAffected,
 	})
 
-	//	--------------- Recordatorios ----------------------------------------
+	
+}
+//	--------------- Recordatorios ----------------------------------------
 
-	//	Obtener la lista de los recordatorios
+//	Obtener la lista de los recordatorios
 
-	func GetRemindersByUserId(c *gin.Context) {
+func GetRemindersByUserId(c *gin.Context) {
 
-		/*
-			type Reminders struct{
-				N_idUsuario			int			`json:"N_idUsuario"`
-				N_idRecordatorio	int			`json:"N_idRecordatorio"`
-				T_nombre			string		`json:"T_nombre"`
-				T_descripción		string		`json:"T_descripción"`
-				Dt_fechaVencimiento	string		`json:"Dt_fechaVencimiento"`
-				B_isDeleted			*bool		`json:"B_isDeleted"`
-				T_Prioridad			string		`json:"T_Prioridad"`
-				Etiqueta			string		`json:"Etiqueta"`
-			}
-		*/
+	/*
+		type Reminders struct{
+			N_idUsuario			int			`json:"N_idUsuario"`
+			N_idRecordatorio	int			`json:"N_idRecordatorio"`
+			T_nombre			string		`json:"T_nombre"`
+			T_descripción		string		`json:"T_descripción"`
+			Dt_fechaVencimiento	string		`json:"Dt_fechaVencimiento"`
+			B_isDeleted			*bool		`json:"B_isDeleted"`
+			T_Prioridad			string		`json:"T_Prioridad"`
+			Etiqueta			string		`json:"Etiqueta"`
+		}
+	*/
 
-		//	Id del usuario
-		id_User := c.Param("id")
+	//	Id del usuario
+	id_User := c.Param("id")
 
-		//	Consulta
-		rows, err := db.Query(
-			`
-			SELECT * FROM RecordatoriosUsuarios 
-			WHERE N_idUsuario = (SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?)
-			`,
-			id_User
+	//	Consulta
+	rows, err := db.Query(
+		`
+		SELECT * FROM RecordatoriosUsuarios 
+		WHERE N_idUsuario = (SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?)
+		`,
+		id_User,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	defer rows.Close()
+
+	var remindersArray []Reminders
+
+	//	Escanear y guardar la información de la consulta
+	for rows.Next() {
+		var reminder Reminders
+		err := rows.Scan(
+			&reminder.N_idUsuario,
+			&reminder.N_idRecordatorio,
+			&reminder.T_nombre,
+			&reminder.T_descripción,
+			&reminder.Dt_fechaVencimiento,
+			&reminder.B_isDeleted,
+			&reminder.T_Prioridad,
+			&reminder.Etiqueta,
 		)
 
 		if err != nil {
-			log.Printf("Database error: %v", err)
-			c.JSON(500, gin.H{"error": "Internal server error"})
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
 			return
 		}
-		defer rows.Close()
-
-		var remindersArray []Reminders
-
-		//	Escanear y guardar la información de la consulta
-		for rows.Next() {
-			var reminder Reminders
-			err := rows.Scan(
-				&reminder.N_idUsuario,
-				&reminder.N_idRecordatorio,
-				&reminder.T_nombre,
-				&reminder.T_descripción,
-				&reminder.Dt_fechaVencimiento,
-				&reminder.B_isDeleted,
-				&reminder.T_Prioridad,
-				&reminder.Etiqueta
-			)
-
-			if err != nil {
-				log.Printf("Scan error: %v", err)
-				c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
-				return
-			}
-			remindersArray = append(remindersArray, reminder)
-		}
-		if err = rows.Err(); err != nil {
-			log.Printf("Rows error: %v", err)
-			c.JSON(500, gin.H{"error": "Error leyendo resultados"})
-			return
-		}
-
-		c.JSON(200, reminder)
+		remindersArray = append(remindersArray, reminder)
+	}
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
 	}
 
+	c.JSON(200, remindersArray)
 }
+
+//	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
+
 func auth(c *gin.Context) {
 	var User UserAuth
 	err := c.BindJSON(&User)
