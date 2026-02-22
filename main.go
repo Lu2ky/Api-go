@@ -63,14 +63,23 @@ type forDeleteOrRecoveryPersonalSchedule struct {
 	IdPersonalSchedule int   `json:"IdPersonalSchedule" binding:"required"`
 }
 type NewPersonalActivity struct {
-	Activity          string `json:"Activity"`
+	/*Activity          string `json:"Activity"`
 	Description       string `json:"Description"`
 	IdTag             int    `json:"IdTag"`
 	Day               int    `json:"Day"`
 	StartHour         string `json:"StartHour"`
 	EndHour           string `json:"EndHour"`
 	N_iduser          int    `json:"N_iduser"`
-	Id_AcademicPeriod int    `json:"Id_AcademicPeriod"`
+	Id_AcademicPeriod int    `json:"Id_AcademicPeriod"`*/
+	P_usuario		int			`json:"P_usuario"`
+	P_nombreCurso	string		`json:"P_nombreCurso"`
+	P_descripcion	string		`json:"P_descripcion"`
+	P_fechaInicio	string		`json:"P_fechaInicio"`
+	P_fechaFin		string		`json:"P_fechaFin"`
+	P_dia			int			`json:"P_dia"`
+	P_horaInicio	string		`json:"P_horaInicio"`
+	P_horaFin		string		`json:"P_horaFin"`
+	P_periodo		int			`json:"P_periodo"`
 }
 type ofcComments struct {
 	N_idHorario  int           `json:"N_idHorario"`
@@ -86,6 +95,16 @@ type new_ofcComments struct {
 	N_idCurso    int    `json:"N_idCurso"`
 	Curso        string `json:"Curso"`
 	T_comentario string `json:"T_comentario"`
+}
+type Reminders struct{
+	N_idUsuario				int			`json:"N_idUsuario"`
+	N_idRecordatorio		int			`json:"N_idRecordatorio"`
+	T_nombre				string		`json:"T_nombre"`
+	T_descripción			string		`json:"T_descripción"`
+	Dt_fechaVencimiento		string		`json:"Dt_fechaVencimiento"`
+	B_isDeleted				*bool		`json:"B_isDeleted"`
+	T_Prioridad				string		`json:"T_Prioridad"`
+	Etiqueta				string		`json:"Etiqueta"`
 }
 
 func apiKeyAuth() gin.HandlerFunc {
@@ -128,10 +147,17 @@ func main() {
 	defer db.Close()
 	router := gin.Default()
 	router.Use(apiKeyAuth())
+	/*
+		Aqui están los métodos que provee la API, cuando se quiere obtener una consulta nueva de la BD, se tiene que
+		especificar en esta sección. Todo debe tener los mismos nombres, en la URL y en el método de la consulta.
+	*/
+	//Métodos para obtener información
 	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
 	router.GET("/GetPersonalScheduleByUserId/:id", getPersonalScheduleByUserId)
 	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserIdAndCourseId)
 	router.GET("/GetTags", getTags)
+	router.GET("/GetReminders/:id", GetRemindersByUserId)
+	//Métodos para hacer modificaciones a la BD
 	router.POST("/updateNameOfPersonalScheduleByIdCourse", updateNameOfPersonalScheduleByIdCourse)
 	router.POST("/updateDescriptionOfPersonalScheduleByIdCourse", updateDescriptionOfPersonalScheduleByIdCourse)
 	router.POST("/updateStartHourOfPersonalScheduleByIdCourse", updateStartHourOfPersonalScheduleByIdCourse)
@@ -146,25 +172,62 @@ func method(c *gin.Context) {}
 
 // c *gin.Context essential for method in GET/POST actions
 
-/* This function is a basic get for get the users from database */
+/* 
+	This function is a basic get for get the users from database 
+
+
+	Aquí está explicado un método el método GET para obtener las actividades oficiales.
+*/
 
 func getOfficialScheduleByUserId(c *gin.Context) {
+	//	este ID sale de la URL | /GetOfficialScheduleByUserId/:id
+	//	Param() se encarga de extraer los parámetros definidos en la ruta.
 	id := c.Param("id")
 
+	/*
+		db.Query retorna rows y err
+		rows = *sql.rows | Es un puntero que tiene información de la consulta.
+
+		* Para iterar sobre los resultados se usa rows.Next()
+		* Para leer los valores de cada fila se hace un rows.Scan()
+		* Y para cerrar la consulta se hace un rows.Close(), lo cual es necesario para evitar fugas de recursos que causan
+		errores como que ya no se pueden hacer conexiones.
+
+		Cada vez que se hace el db.Query hay que hacer esos pasos para sacar la info de la consulta.
+
+		El operador := lo que hace es definir una variable e inferir su tipo automáticamente.
+	*/
 	rows, err := db.Query(`SELECT ao.* FROM ActividadesOficiales ao JOIN Usuarios u ON ao.N_idUsuario = u.N_idUsuario WHERE u.T_codUsuario = ?`, id)
+
+	//	si err != nil entonces significa que hay un error.
+	//	nil es similar a null. Entonces si el error es nulo significa que no hay errores.
 
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
+
+	/*
+		defer hace que cuando la función actual termine, entonces se ejecute rows.Close()
+		es decir, después de hacer el return.
+
+		Es buena práctica hacer el defer rows.Close inmediatamente después de abrir la consulta.
+	*/
 	defer rows.Close()
+	
+	//	Aquí se van a almacenar los resultados de la consulta.
+	//	Se utiiza el OfficialSchedule para tener una estructura a la hora de guardar la información de la consulta.
 
 	var ofcschedules []OfficialSchedule
 
 	for rows.Next() {
 		var ofcschedule OfficialSchedule
 		err := rows.Scan(
+			//	Lo que hace en cada parámetro aquí es asignarle a la dirección de memoria el resultado dado por la base de datos
+			//	Es MUY importante que estén en el mismo orden que lo devuelve la consulta, porque sino puede haber errores
+			//	Los nombres de cada atributo pueden ser diferentes, pero para no perderse, es mejor usar el mismo nombre. 
+
 			&ofcschedule.N_iduser,
 			&ofcschedule.N_idcourse,
 			&ofcschedule.Nrc,
@@ -185,15 +248,20 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
 			return
 		}
+
+		//	Y aquí se agrega el objeto ofcschedule al arreglo ofcschedules.
 		ofcschedules = append(ofcschedules, ofcschedule)
 	}
 
+	//	Se verifica si hubo errores mientras se hizo la iteración usando rows.Err(). 
+	//	Si Next() retorna False, entonces para revisar cuál fue el error se usa rows.Err()
 	if err = rows.Err(); err != nil {
 		log.Printf("Rows error: %v", err)
 		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
 		return
 	}
 
+	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
 	c.JSON(200, ofcschedules)
 }
 
@@ -273,19 +341,45 @@ func getPersonalCommentsByUserIdAndCourseId(c *gin.Context) {
 
 	c.JSON(200, ofcCommentsArray)
 }
+
+
+//	Aquí está explicado un método POST, en este caso, Actualizar el nombre de una actividad personal.
+
 func updateNameOfPersonalScheduleByIdCourse(c *gin.Context) {
+	//	Aquí se instancia la estructura definida en la parte superior.
 	var newValue PersonalScheduleNewValue
+
+	/*
+		BindJSON() se encarga de tomar el body request de la petición y lo convierte en una estructura de GO
+		Aquí es importante que el JSON del body tenga los mismos campos ya definidos, en este caso, en PersonalScheduleNewValue
+		También retorna un error en caso de haber uno.
+
+		Se usa como argumento &newValue para darle la dirección de memoria de la estructura GO y así almacenar la info.
+	*/
 	err := c.BindJSON(&newValue)
+
 	if err != nil {
 		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
 		return
 	}
+	/*
+		El método Query() se utilizaba cuando la consulta era un SELECT.
+		En este caso, un UPDATE, se utiliza Exec, y retorna: 
+			sql.Result, error
+		
+		Los signos de pregunta (?) indican los parámetros que se envían a la consulta.
+		en el segundo argumento, los parámetros deben estar en el mismo orden que son solicitados en la consulta.
+	*/
 	result, err := db.Exec("UPDATE ActividadesPersonales SET Actividad = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
+	
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
+
+	//	rowsAffected contiene la cantidad de filas que fueron modificadas
+	//	Se utiliza un guión al piso (_) para ignorar el error, porque result.RowsAffected retorna int64, error
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
@@ -429,12 +523,55 @@ func getTags(c *gin.Context) {
 }
 func addPersonalActivity(c *gin.Context) {
 	var newPerActivity NewPersonalActivity
+
+	//	Se asignan los valores el JSON a la estructura newPerActivity
 	err := c.BindJSON(&newPerActivity)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
 		return
 	}
 
+	/*
+		type NewPersonalActivity struct {
+			P_usuario		int			`json:"P_usuario"`
+			P_nombreCurso	string		`json:"P_nombreCurso"`
+			P_descripcion	string		`json:"P_descripcion"`
+			P_fechaInicio	string		`json:"P_fechaInicio"`
+			P_fechaFin		string		`json:"P_fechaFin"`
+			P_dia			int			`json:"P_dia"`
+			P_horaInicio	string		`json:"P_horaInicio"`
+			P_horaFin		string		`json:"P_horaFin"`
+			P_periodo		int			`json:"P_periodo"`
+		}
+	*/
+
+	//	Aquí se hace el llamado al Procedimiento
+	result, err := db.Exec("CALL crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		newPerActivity.p_usuario,
+		newPerActivity.p_nombreCurso,
+		newPerActivity.p_descripcion,
+		newPerActivity.p_fechaInicio,
+		newPerActivity.p_fechaFin,
+		newPerActivity.p_dia,
+		newPerActivity.p_horaInicio,
+		newPerActivity.p_horaFin,
+		newPerActivity.p_hp_periodooraFin
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "Personal schedule not found"})
+		return
+	}
+
+	/*
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("Transaction error: %v", err)
@@ -498,7 +635,7 @@ func addPersonalActivity(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-
+	*/
 	c.JSON(200, gin.H{
 		"message": "Actividad creada correctamente",
 	})
@@ -529,6 +666,76 @@ func addPersonalComment(c *gin.Context) {
 		"message":      "Comentario agregado correctamente",
 		"rowsAffected": rowsAffected,
 	})
+
+	//	--------------- Recordatorios ----------------------------------------
+
+	//	Obtener la lista de los recordatorios
+
+	func GetRemindersByUserId(c *gin.Context) {
+
+		/*
+			type Reminders struct{
+				N_idUsuario			int			`json:"N_idUsuario"`
+				N_idRecordatorio	int			`json:"N_idRecordatorio"`
+				T_nombre			string		`json:"T_nombre"`
+				T_descripción		string		`json:"T_descripción"`
+				Dt_fechaVencimiento	string		`json:"Dt_fechaVencimiento"`
+				B_isDeleted			*bool		`json:"B_isDeleted"`
+				T_Prioridad			string		`json:"T_Prioridad"`
+				Etiqueta			string		`json:"Etiqueta"`
+			}
+		*/
+
+		//	Id del usuario
+		id_User := c.Param("id")
+
+		//	Consulta
+		rows, err := db.Query(
+			`
+			SELECT * FROM RecordatoriosUsuarios 
+			WHERE N_idUsuario = (SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?)
+			`,
+			id_User
+		)
+
+		if err != nil {
+			log.Printf("Database error: %v", err)
+			c.JSON(500, gin.H{"error": "Internal server error"})
+			return
+		}
+		defer rows.Close()
+
+		var remindersArray []Reminders
+
+		//	Escanear y guardar la información de la consulta
+		for rows.Next() {
+			var reminder Reminders
+			err := rows.Scan(
+				&reminder.N_idUsuario,
+				&reminder.N_idRecordatorio,
+				&reminder.T_nombre,
+				&reminder.T_descripción,
+				&reminder.Dt_fechaVencimiento,
+				&reminder.B_isDeleted,
+				&reminder.T_Prioridad,
+				&reminder.Etiqueta
+			)
+
+			if err != nil {
+				log.Printf("Scan error: %v", err)
+				c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+				return
+			}
+			remindersArray = append(remindersArray, reminder)
+		}
+		if err = rows.Err(); err != nil {
+			log.Printf("Rows error: %v", err)
+			c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+			return
+		}
+
+		c.JSON(200, reminder)
+	}
 
 }
 
