@@ -195,7 +195,7 @@ func main() {
 	router.POST("/auth", auth)
 	router.POST("/addauthuser", createUser)
 
-	router.Run("0.0.0.0:3914") // The port number for expone the API
+	router.Run("0.0.0.0:3913") // The port number for expone the API
 
 }
 func method(c *gin.Context) {}
@@ -842,7 +842,7 @@ func (j JWTManager) Validate(tokenStr string) (*Claims, error) {
 }
 
 func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) {
-	l, err := ldap.DialURL("ldap://127.0.0.1:389")
+	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
 	if err != nil {
 		return "", nil, err
 	}
@@ -929,7 +929,7 @@ func createUser(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
 func CreateLDAPUser(adminUser, adminPass, username, password string) error {
-	l, err := ldap.DialURL("ldap://127.0.0.1:389")
+	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
 	if err != nil {
 		return err
 	}
