@@ -136,8 +136,8 @@ func apiKeyAuth() gin.HandlerFunc {
 	}
 }
 func main() {
-	//
-	err := godotenv.Load("../../config/goapiconfig.env") // Load enviorement variables
+	//"../../config/goapiconfig.env"
+	err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
