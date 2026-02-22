@@ -136,8 +136,8 @@ func apiKeyAuth() gin.HandlerFunc {
 	}
 }
 func main() {
-	//"../../config/goapiconfig.env"
-	err := godotenv.Load() // Load enviorement variables
+	//
+	err := godotenv.Load("../../config/goapiconfig.env") // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
@@ -632,7 +632,7 @@ func (j JWTManager) Validate(tokenStr string) (*Claims, error) {
 }
 
 func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) {
-	l, err := ldap.DialURL("ldap://127.0.0.1:389")
+	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
 	if err != nil {
 		return "", nil, err
 	}
@@ -719,7 +719,7 @@ func createUser(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
 func CreateLDAPUser(adminUser, adminPass, username, password string) error {
-	l, err := ldap.DialURL("ldap://127.0.0.1:389")
+	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
 	if err != nil {
 		return err
 	}
