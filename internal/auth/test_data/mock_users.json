@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "username": "student",
+      "password": "student123",
+      "id": "student",
+      "displayName": "Student Local",
+      "roles": ["ROLE_STUDENT"],
+      "disabled": false
+    },
+    {
+      "username": "admin",
+      "password": "admin123",
+      "id": "admin",
+      "displayName": "Admin Local",
+      "roles": ["ROLE_ADMIN"],
+      "disabled": false
+    },
+    {
+      "username": "disabled_user",
+      "password": "pass123",
+      "id": "disabled_user",
+      "displayName": "Disabled User",
+      "roles": ["ROLE_STUDENT"],
+      "disabled": true
+    }
+  ]
+}
