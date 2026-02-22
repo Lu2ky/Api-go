@@ -169,7 +169,7 @@ func main() {
 	router.POST("/auth", auth)
 	router.POST("/addauthuser", createUser)
 
-	router.Run("0.0.0.0:3914") // The port number for expone the API
+	router.Run("0.0.0.0:3913") // The port number for expone the API
 
 }
 func method(c *gin.Context) {}
