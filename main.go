@@ -3,12 +3,20 @@ package main
 import (
 	//"encoding/json"
 	//"net/http"
+	"crypto/tls"
 	"database/sql"
+	"encoding/binary"
+	"errors"
+	"fmt"
 	"log"
 	"os"
+	"time"
+	"unicode/utf16"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-ldap/ldap/v3"
 	"github.com/go-sql-driver/mysql"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 )
 
@@ -16,12 +24,30 @@ var db *sql.DB
 
 //Pruebita
 /* Saving the session of MySQL, this is global for the access in all methods */
-
 type User struct {
-	Id       int    `json:"T_idUsuario"`
-	Name     string `json:"T_nombre"`
-	Programa string `json:"T_programa"`
+	Username string
+	Roles    []string
 }
+type UserAuth struct {
+	User string `json:"user"`
+	Pass string `json:"pass"`
+}
+
+const clockSkewTolerance = 10 * time.Second
+
+type JWTManager struct {
+	Secret []byte
+	TTL    time.Duration
+	Issuer string
+}
+
+type Claims struct {
+	UserID string   `json:"sub"`
+	Name   string   `json:"name"`
+	Roles  []string `json:"roles"`
+	jwt.RegisteredClaims
+}
+
 type OfficialSchedule struct {
 	N_iduser               int             `json:"N_iduser"`
 	N_idcourse             int             `json:"N_idcourse"`
@@ -110,7 +136,8 @@ func apiKeyAuth() gin.HandlerFunc {
 	}
 }
 func main() {
-	err := godotenv.Load("../../config/goapiconfig.env") // Load enviorement variables
+	//"../../config/goapiconfig.env"
+	err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
@@ -139,8 +166,11 @@ func main() {
 	router.POST("/deleteOrRecoveryPersonalScheduleByIdCourse", deleteOrRecoveryPersonalScheduleByIdCourse)
 	router.POST("/addPersonalActivity", addPersonalActivity)
 	router.POST("/addPersonalComment", addPersonalComment)
+	router.POST("/auth", auth)
+	router.POST("/addauthuser", createUser)
 
-	router.Run("0.0.0.0:3913") // The port number for expone the API
+	router.Run("0.0.0.0:3914") // The port number for expone the API
+
 }
 func method(c *gin.Context) {}
 
@@ -530,6 +560,237 @@ func addPersonalComment(c *gin.Context) {
 		"rowsAffected": rowsAffected,
 	})
 
+}
+func auth(c *gin.Context) {
+	var User UserAuth
+	err := c.BindJSON(&User)
+	token, userU, err2 := ConnectLDAP(User.User, User.Pass, JWTManager{
+		Secret: []byte(os.Getenv("JWT_SECRET")),
+		TTL:    24 * time.Hour,
+		Issuer: "horario_estudiantes",
+	})
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	if err2 != nil {
+		log.Printf("ldap error: %v", err2)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	c.JSON(200, gin.H{
+		"Token":    token,
+		"UserAuth": userU,
+	})
+
+}
+
+func (j JWTManager) Generate(u *User) (string, error) {
+	now := time.Now()
+	claims := Claims{
+		UserID: u.Username,
+		Roles:  u.Roles,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    j.Issuer,
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now.Add(-clockSkewTolerance)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(j.TTL)),
+			Subject:   u.Username,
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(j.Secret)
+}
+
+func (j JWTManager) Validate(tokenStr string) (*Claims, error) {
+	if tokenStr == "" {
+		return nil, errors.New("sin token")
+	}
+
+	parsed, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
+		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, errors.New("erro en el metodo de inicio")
+		}
+		return j.Secret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := parsed.Claims.(*Claims)
+	if !ok || !parsed.Valid {
+		return nil, errors.New("token invalido")
+	}
+
+	if j.Issuer != "" && claims.Issuer != j.Issuer {
+		return nil, errors.New("que?")
+	}
+
+	return claims, nil
+}
+
+func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) {
+	l, err := ldap.DialURL("ldap://127.0.0.1:389")
+	if err != nil {
+		return "", nil, err
+	}
+	defer l.Close()
+
+	l.SetTimeout(5 * time.Second)
+
+	err = l.StartTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	})
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = l.Bind(user+"@adhe.local", pass)
+	if err != nil {
+		return "", nil, err
+	}
+
+	searchRequest := ldap.NewSearchRequest(
+		"DC=adhe,DC=local",
+		ldap.ScopeWholeSubtree,
+		ldap.NeverDerefAliases,
+		0,
+		0,
+		false,
+		fmt.Sprintf("(sAMAccountName=%s)", user),
+		[]string{"memberOf", "displayName"},
+		nil,
+	)
+
+	sr, err := l.Search(searchRequest)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if len(sr.Entries) == 0 {
+		return "", nil, errors.New("usuario no encontrado en LDAP")
+	}
+
+	entry := sr.Entries[0]
+
+	var roles []string
+	for _, groupDN := range entry.GetAttributeValues("memberOf") {
+		dn, err := ldap.ParseDN(groupDN)
+		if err == nil && len(dn.RDNs) > 0 {
+			cn := dn.RDNs[0].Attributes[0].Value
+			roles = append(roles, cn)
+		}
+	}
+
+	u := &User{
+		Username: user,
+		Roles:    roles,
+	}
+
+	token, err := j.Generate(u)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return token, u, nil
+}
+func createUser(c *gin.Context) {
+	var req UserAuth
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON inválido"})
+		return
+	}
+
+	err := CreateLDAPUser(
+		os.Getenv("ADMIN_LDAP_ADMIN"),
+		os.Getenv("ADMIN_LDAP_PASS"),
+		req.User,
+		req.Pass,
+	)
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
+}
+func CreateLDAPUser(adminUser, adminPass, username, password string) error {
+	l, err := ldap.DialURL("ldap://127.0.0.1:389")
+	if err != nil {
+		return err
+	}
+	defer l.Close()
+
+	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+	if err != nil {
+		return err
+	}
+
+	err = l.Bind(adminUser+"@adhe.local", adminPass)
+	if err != nil {
+		return err
+	}
+
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=adhe,DC=local", username)
+
+	addReq := ldap.NewAddRequest(userDN, nil)
+
+	addReq.Attribute("objectClass", []string{
+		"top",
+		"person",
+		"organizationalPerson",
+		"user",
+	})
+
+	addReq.Attribute("cn", []string{username})
+	addReq.Attribute("sAMAccountName", []string{username})
+	addReq.Attribute("userPrincipalName", []string{username + "@adhe.local"})
+	addReq.Attribute("displayName", []string{username})
+	addReq.Attribute("userAccountControl", []string{"544"})
+
+	err = l.Add(addReq)
+	if err != nil {
+		return err
+	}
+
+	quotedPwd := fmt.Sprintf("\"%s\"", password)
+	utf16Pwd := utf16.Encode([]rune(quotedPwd))
+
+	pwdBytes := make([]byte, len(utf16Pwd)*2)
+	for i, v := range utf16Pwd {
+		binary.LittleEndian.PutUint16(pwdBytes[i*2:], v)
+	}
+
+	modPwd := ldap.NewModifyRequest(userDN, nil)
+	modPwd.Replace("unicodePwd", []string{string(pwdBytes)})
+
+	err = l.Modify(modPwd)
+	if err != nil {
+		return fmt.Errorf("error seteando password: %v", err)
+	}
+	modEnable := ldap.NewModifyRequest(userDN, nil)
+	modEnable.Replace("userAccountControl", []string{"512"})
+
+	err = l.Modify(modEnable)
+	if err != nil {
+		return fmt.Errorf("error habilitando usuario: %v", err)
+	}
+
+	groupDN := "CN=Usuario,CN=Users,DC=adhe,DC=local"
+
+	modGroup := ldap.NewModifyRequest(groupDN, nil)
+	modGroup.Add("member", []string{userDN})
+
+	err = l.Modify(modGroup)
+	if err != nil {
+		return fmt.Errorf("error agregando al grupo Usuario: %v", err)
+	}
+
+	return nil
 }
 
 // Last test for today :P -Luky (CI/CD test)
