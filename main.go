@@ -123,14 +123,14 @@ type new_ofcComments struct {
 	T_comentario string `json:"T_comentario"`
 }
 type Reminders struct{
-	N_idUsuario				int			`json:"N_idUsuario"`
-	N_idRecordatorio		int			`json:"N_idRecordatorio"`
-	T_nombre				string		`json:"T_nombre"`
-	T_descripción			string		`json:"T_descripción"`
-	Dt_fechaVencimiento		string		`json:"Dt_fechaVencimiento"`
-	B_isDeleted				*bool		`json:"B_isDeleted"`
-	T_Prioridad				string		`json:"T_Prioridad"`
-	Etiqueta				string		`json:"Etiqueta"`
+	N_idUsuario				int				`json:"N_idUsuario"`
+	N_idRecordatorio		int				`json:"N_idRecordatorio"`
+	T_nombre				string			`json:"T_nombre"`
+	T_descripcion			sql.NullString	`json:"T_descripcion"`
+	Dt_fechaVencimiento		sql.NullString	`json:"Dt_fechaVencimiento"`
+	B_isDeleted				*bool			`json:"B_isDeleted"`
+	T_Prioridad				string			`json:"T_Prioridad"`
+	Etiqueta				string			`json:"Etiqueta"`
 }
 
 func apiKeyAuth() gin.HandlerFunc {
@@ -746,7 +746,7 @@ func GetRemindersByUserId(c *gin.Context) {
 			&reminder.N_idUsuario,
 			&reminder.N_idRecordatorio,
 			&reminder.T_nombre,
-			&reminder.T_descripción,
+			&reminder.T_descripcion,
 			&reminder.Dt_fechaVencimiento,
 			&reminder.B_isDeleted,
 			&reminder.T_Prioridad,
