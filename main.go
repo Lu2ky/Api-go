@@ -50,6 +50,7 @@ type Claims struct {
 }
 
 type OfficialSchedule struct {
+	N_idHorario            int             `json:"N_idHorario"`
 	N_iduser               int             `json:"N_iduser"`
 	N_idcourse             int             `json:"N_idcourse"`
 	Nrc                    string          `json:"Nrc"`
@@ -160,7 +161,7 @@ type ReminderNewValue struct {
 	P_nombre      string         `json:"P_nombre"`
 	P_descripcion string         `json:"P_descripcion"`
 	P_fecha       string         `json:"P_fecha"`
-	P_prioridad   int            `json:"P_prioridad"`
+	P_prioridad   string         `json:"P_prioridad"`
 	P_tag1        sql.NullString `json:"P_tag1"`
 	P_tag2        sql.NullString `json:"P_tag2"`
 	P_tag3        sql.NullString `json:"P_tag3"`
@@ -172,7 +173,7 @@ type EditReminder struct {
 	P_nombre      sql.NullString `json:"P_nombre"`
 	P_descripcion sql.NullString `json:"P_descripcion"`
 	P_fecha       sql.NullString `json:"P_fecha"`
-	P_prioridad   sql.NullInt64  `json:"P_prioridad"`
+	P_prioridad   sql.NullString `json:"P_prioridad"`
 	P_tag1        string         `json:"P_tag1"`
 	P_tag2        string         `json:"P_tag2"`
 	P_tag3        string         `json:"P_tag3"`
@@ -325,7 +326,7 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 			//	Lo que hace en cada parámetro aquí es asignarle a la dirección de memoria el resultado dado por la base de datos
 			//	Es MUY importante que estén en el mismo orden que lo devuelve la consulta, porque sino puede haber errores
 			//	Los nombres de cada atributo pueden ser diferentes, pero para no perderse, es mejor usar el mismo nombre.
-
+			&ofcschedule.N_idHorario,
 			&ofcschedule.N_iduser,
 			&ofcschedule.N_idcourse,
 			&ofcschedule.Nrc,
@@ -606,7 +607,7 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"message": "Actividad creada correctamente",
+		"message": "Actividad actualizada correctamente",
 	})
 }
 
