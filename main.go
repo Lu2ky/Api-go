@@ -80,10 +80,11 @@ type PersonalSchedule struct {
 	IsDeleted   *sql.NullBool  `json:"IsDeleted"`
 }
 type Tags struct {
-	N_idUsuario      int    `json:"N_idUsuario"`
-	N_idRecordatorio int    `json:"N_idRecordatorio"`
-	N_idEtiqueta     int    `json:"N_idEtiqueta"`
-	T_nombre         string `json:"T_nombre"`
+	N_idUsuario      int           `json:"N_idUsuario"`
+	N_idRecordatorio int           `json:"N_idRecordatorio"`
+	N_idEtiqueta     int           `json:"N_idEtiqueta"`
+	T_nombre         string        `json:"T_nombre"`
+	B_isDeleted      *sql.NullBool `json:"B_isDeleted"`
 }
 type DelTag struct {
 	N_idEtiqueta int `json:"N_idEtiqueta"`
@@ -96,14 +97,6 @@ type forDeleteOrRecoveryPersonalSchedule struct {
 	IdPersonalSchedule int `json:"IdPersonalSchedule" binding:"required"`
 }
 type NewPersonalActivity struct {
-	/*Activity          string `json:"Activity"`
-	Description       string `json:"Description"`
-	IdTag             int    `json:"IdTag"`
-	Day               int    `json:"Day"`
-	StartHour         string `json:"StartHour"`
-	EndHour           string `json:"EndHour"`
-	N_iduser          int    `json:"N_iduser"`
-	Id_AcademicPeriod int    `json:"Id_AcademicPeriod"`*/
 	P_usuario     int    `json:"P_usuario"`
 	P_nombreCurso string `json:"P_nombreCurso"`
 	P_descripcion string `json:"P_descripcion"`
@@ -125,18 +118,16 @@ type EditPersonalActivity struct {
 	P_horaFin     string `json:"P_horaFin"`
 }
 type ofcComments struct {
-	N_idHorario  int           `json:"N_idHorario"`
-	N_idUsuario  int           `json:"N_idUsuario"`
-	N_idCurso    int           `json:"N_idCurso"`
-	Curso        string        `json:"Curso"`
-	T_comentario string        `json:"T_comentario"`
-	B_isDeleted  *sql.NullBool `json:"B_isDeleted"`
+	N_idHorario     int           `json:"N_idHorario"`
+	N_idUsuario     int           `json:"N_idUsuario"`
+	N_idCurso       int           `json:"N_idCurso"`
+	Curso           string        `json:"Curso"`
+	N_idComentarios int           `json:"N_idComentarios"`
+	T_comentario    string        `json:"T_comentario"`
+	B_isDeleted     *sql.NullBool `json:"B_isDeleted"`
 }
 type new_ofcComments struct {
 	N_idHorario  int    `json:"N_idHorario"`
-	N_idUsuario  int    `json:"N_idUsuario"`
-	N_idCurso    int    `json:"N_idCurso"`
-	Curso        string `json:"Curso"`
 	T_comentario string `json:"T_comentario"`
 }
 type edit_ofcComment struct {
@@ -157,28 +148,28 @@ type Reminders struct {
 	T_Prioridad         string         `json:"T_Prioridad"`
 }
 type ReminderNewValue struct {
-	P_usuario     int            `json:"P_usuario"`
-	P_nombre      string         `json:"P_nombre"`
-	P_descripcion string         `json:"P_descripcion"`
-	P_fecha       string         `json:"P_fecha"`
-	P_prioridad   string         `json:"P_prioridad"`
-	P_tag1        sql.NullString `json:"P_tag1"`
-	P_tag2        sql.NullString `json:"P_tag2"`
-	P_tag3        sql.NullString `json:"P_tag3"`
-	P_tag4        sql.NullString `json:"P_tag4"`
-	P_tag5        sql.NullString `json:"P_tag5"`
+	P_usuario     int     `json:"P_usuario"`
+	P_nombre      string  `json:"P_nombre"`
+	P_descripcion string  `json:"P_descripcion"`
+	P_fecha       string  `json:"P_fecha"`
+	P_prioridad   int     `json:"P_prioridad"`
+	P_tag1        *string `json:"P_tag1"`
+	P_tag2        *string `json:"P_tag2"`
+	P_tag3        *string `json:"P_tag3"`
+	P_tag4        *string `json:"P_tag4"`
+	P_tag5        *string `json:"P_tag5"`
 }
 type EditReminder struct {
-	P_idToDo      int            `json:"P_idToDo"`
-	P_nombre      sql.NullString `json:"P_nombre"`
-	P_descripcion sql.NullString `json:"P_descripcion"`
-	P_fecha       sql.NullString `json:"P_fecha"`
-	P_prioridad   sql.NullString `json:"P_prioridad"`
-	P_tag1        string         `json:"P_tag1"`
-	P_tag2        string         `json:"P_tag2"`
-	P_tag3        string         `json:"P_tag3"`
-	P_tag4        string         `json:"P_tag4"`
-	P_tag5        string         `json:"P_tag5"`
+	P_idToDo      int     `json:"P_idToDo"`
+	P_nombre      *string `json:"P_nombre"`
+	P_descripcion *string `json:"P_descripcion"`
+	P_fecha       *string `json:"P_fecha"`
+	P_prioridad   *int    `json:"P_prioridad"`
+	P_tag1        *string `json:"P_tag1"`
+	P_tag2        *string `json:"P_tag2"`
+	P_tag3        *string `json:"P_tag3"`
+	P_tag4        *string `json:"P_tag4"`
+	P_tag5        *string `json:"P_tag5"`
 }
 type DelReminder struct {
 	N_idRecordatorio int `json:"N_idRecordatorio"`
@@ -206,7 +197,7 @@ func apiKeyAuth() gin.HandlerFunc {
 	}
 }
 func main() {
-	//"../../config/goapiconfig.env"
+	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
 	err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
@@ -263,6 +254,7 @@ func main() {
 	router.POST("/addauthuser", createUser)
 
 	router.Run("0.0.0.0:3913") // The port number for expone the API
+	//router.Run(":8080")
 
 }
 func method(c *gin.Context) {}
@@ -383,6 +375,7 @@ func getPersonalCommentsByUserIdAndCourseId(c *gin.Context) {
 			&ofcComment.N_idUsuario,
 			&ofcComment.N_idCurso,
 			&ofcComment.Curso,
+			&ofcComment.N_idComentarios,
 			&ofcComment.T_comentario,
 			&ofcComment.B_isDeleted,
 		)
@@ -412,10 +405,8 @@ func addPersonalComment(c *gin.Context) {
 	}
 
 	result, err := db.Exec(
-		"INSERT INTO Comentarios (N_idHorario, N_idUsuario, N_idCurso, T_comentario) VALUES (?, ?, ?, ?)",
+		"INSERT INTO Comentarios (N_idHorario, T_Comentario) VALUES (?, ?)",
 		newComment.N_idHorario,
-		newComment.N_idUsuario,
-		newComment.N_idCurso,
 		newComment.T_comentario,
 	)
 	if err != nil {
@@ -914,6 +905,7 @@ func GetTagsByUserId(c *gin.Context) {
 			&Tags.N_idRecordatorio,
 			&Tags.N_idEtiqueta,
 			&Tags.T_nombre,
+			&Tags.B_isDeleted,
 		)
 
 		if err != nil {
@@ -970,6 +962,7 @@ func GetTagsByUserIdAndReminderId(c *gin.Context) {
 			&Tags.N_idRecordatorio,
 			&Tags.N_idEtiqueta,
 			&Tags.T_nombre,
+			&Tags.B_isDeleted,
 		)
 
 		if err != nil {
@@ -1090,6 +1083,7 @@ func addReminder(c *gin.Context) {
 
 	//	Se asignan los valores el JSON a la estructura reminderNewValue
 	err := c.BindJSON(&reminderNewValue)
+
 	if err != nil {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
 		return
@@ -1133,7 +1127,7 @@ func addReminder(c *gin.Context) {
 	rowsAffected, _ := result.RowsAffected()
 
 	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
+		c.JSON(404, gin.H{"error": "Reminder not found"})
 		return
 	}
 
