@@ -160,7 +160,6 @@ type ReminderNewValue struct {
 	P_tag3        *string `json:"P_tag3"`
 	P_tag4        *string `json:"P_tag4"`
 	P_tag5        *string `json:"P_tag5"`
-
 }
 type EditReminder struct {
 	P_idToDo      int     `json:"P_idToDo"`
@@ -177,6 +176,11 @@ type EditReminder struct {
 }
 type DelReminder struct {
 	N_idRecordatorio int `json:"N_idRecordatorio"`
+}
+type TipoCurso struct {
+	N_idTipoCurso int    `json:"N_idTipoCurso"`
+	T_nombre      string `json:"T_nombre"`
+	B_isDeleted   *bool  `json:"B_isDeleted"`
 }
 
 func apiKeyAuth() gin.HandlerFunc {
@@ -243,6 +247,8 @@ func main() {
 	//	router.POST("/updateEndHourOfPersonalScheduleByIdCourse", updateEndHourOfPersonalScheduleByIdCourse)
 
 	router.POST("/deleteOrRecoveryPersonalScheduleByIdCourse", deleteOrRecoveryPersonalScheduleByIdCourse)
+
+	router.GET("/GetTiposCurso", GetTiposCurso)
 	//	Etiquetas
 	router.GET("/GetTagsByUserId/:id", GetTagsByUserId)
 	router.GET("/GetTagsByUserIdAndReminderId/:id/:reminderId", GetTagsByUserIdAndReminderId)
@@ -876,6 +882,56 @@ func addPersonalActivity(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Actividad creada correctamente",
 	})
+}
+
+// Get tipo cursos
+func GetTiposCurso(c *gin.Context) {
+
+	/*
+		type TipoCurso struct {
+			N_idTipoCurso int    `json:"N_idTipoCurso"`
+			T_nombre      string `json:"T_nombre"`
+			B_isDeleted   int  `json:"B_isDeleted"`
+		}
+	*/
+
+	rows, err := db.Query("SELECT * FROM TipoCurso")
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	defer rows.Close()
+
+	var tiposCursoArray []TipoCurso
+
+	for rows.Next() {
+
+		var tipoCurso TipoCurso
+
+		err := rows.Scan(
+			&tipoCurso.N_idTipoCurso,
+			&tipoCurso.T_nombre,
+			&tipoCurso.B_isDeleted,
+		)
+
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en el procesamiento de datos."})
+			return
+		}
+
+		tiposCursoArray = append(tiposCursoArray, tipoCurso)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	c.JSON(200, tiposCursoArray)
 }
 
 // --------------- Etiquetas ----------------------------------------
