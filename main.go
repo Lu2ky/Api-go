@@ -146,6 +146,7 @@ type Reminders struct {
 	Dt_fechaVencimiento sql.NullString `json:"Dt_fechaVencimiento"`
 	B_isDeleted         *bool          `json:"B_isDeleted"`
 	T_Prioridad         string         `json:"T_Prioridad"`
+	B_estado            *bool          `json:"B_estado"`
 }
 type ReminderNewValue struct {
 	P_usuario     int     `json:"P_usuario"`
@@ -153,11 +154,13 @@ type ReminderNewValue struct {
 	P_descripcion string  `json:"P_descripcion"`
 	P_fecha       string  `json:"P_fecha"`
 	P_prioridad   int     `json:"P_prioridad"`
+	B_estado      *bool   `json:"B_estado"`
 	P_tag1        *string `json:"P_tag1"`
 	P_tag2        *string `json:"P_tag2"`
 	P_tag3        *string `json:"P_tag3"`
 	P_tag4        *string `json:"P_tag4"`
 	P_tag5        *string `json:"P_tag5"`
+
 }
 type EditReminder struct {
 	P_idToDo      int     `json:"P_idToDo"`
@@ -1164,12 +1167,13 @@ func updateReminderById(c *gin.Context) {
 	*/
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("CALL editar_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	result, err := db.Exec("CALL editar_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		reminderNewValue.P_idToDo,
 		reminderNewValue.P_nombre,
 		reminderNewValue.P_descripcion,
 		reminderNewValue.P_fecha,
 		reminderNewValue.P_prioridad,
+		reminderNewValue.P_estado,
 		reminderNewValue.P_tag1,
 		reminderNewValue.P_tag2,
 		reminderNewValue.P_tag3,
