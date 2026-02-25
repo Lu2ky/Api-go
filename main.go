@@ -154,7 +154,7 @@ type ReminderNewValue struct {
 	P_descripcion string  `json:"P_descripcion"`
 	P_fecha       string  `json:"P_fecha"`
 	P_prioridad   int     `json:"P_prioridad"`
-	B_estado      *bool   `json:"B_estado"`
+	P_estado      *bool   `json:"P_estado"`
 	P_tag1        *string `json:"P_tag1"`
 	P_tag2        *string `json:"P_tag2"`
 	P_tag3        *string `json:"P_tag3"`
@@ -168,6 +168,7 @@ type EditReminder struct {
 	P_descripcion *string `json:"P_descripcion"`
 	P_fecha       *string `json:"P_fecha"`
 	P_prioridad   *int    `json:"P_prioridad"`
+	P_estado      *bool   `json:"P_estado"`
 	P_tag1        *string `json:"P_tag1"`
 	P_tag2        *string `json:"P_tag2"`
 	P_tag3        *string `json:"P_tag3"`
@@ -1062,6 +1063,7 @@ func GetRemindersByUserId(c *gin.Context) {
 			&reminder.Dt_fechaVencimiento,
 			&reminder.B_isDeleted,
 			&reminder.T_Prioridad,
+			&reminder.B_estado,
 		)
 
 		if err != nil {
