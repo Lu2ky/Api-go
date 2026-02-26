@@ -64,7 +64,8 @@ type OfficialSchedule struct {
 	Credits                sql.NullFloat64 `json:"Credits"`
 	Standardofcalification string          `json:"Standardofcalification"`
 	Campus                 string          `json:"Campus"`
-	AcademicPeriod         string          `json:"AcademicPeriod"`
+	FechaInicio            string          `json:"FechaInicio"`
+	FechaFinal             string          `json:"FechaFinal"`
 }
 type PersonalSchedule struct {
 	N_iduser    int            `json:"N_iduser"`
@@ -205,8 +206,8 @@ func apiKeyAuth() gin.HandlerFunc {
 	}
 }
 func main() {
-	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	err := godotenv.Load() // Load enviorement variables
+	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	//err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
@@ -263,8 +264,8 @@ func main() {
 	router.POST("/auth", auth)
 	router.POST("/addauthuser", createUser)
 
-	router.Run("0.0.0.0:3913") // The port number for expone the API
-	//router.Run(":8080")
+	//router.Run("0.0.0.0:3913") // The port number for expone the API
+	router.Run(":8080")
 
 }
 func method(c *gin.Context) {}
@@ -342,7 +343,8 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 			&ofcschedule.Credits,
 			&ofcschedule.Standardofcalification,
 			&ofcschedule.Campus,
-			&ofcschedule.AcademicPeriod, //falta
+			&ofcschedule.FechaInicio,
+			&ofcschedule.FechaFinal,
 		)
 		if err != nil {
 			log.Printf("Scan error: %v", err)
