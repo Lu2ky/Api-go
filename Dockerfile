@@ -9,6 +9,7 @@ RUN go build ./main.go
 FROM alpine:latest
 COPY --from=builder /app/main .
 RUN chmod u+x main
+RUN touch .env
 EXPOSE 3913
 CMD ["./main"]
 
