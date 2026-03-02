@@ -183,6 +183,26 @@ type TipoCurso struct {
 	T_nombre      string `json:"T_nombre"`
 	B_isDeleted   *bool  `json:"B_isDeleted"`
 }
+type Notificacion struct {
+	N_idNotificacion int    `json:"idNotificacion"`
+	N_idUsuario      int    `json:"idUsuario"`
+	N_idRecordatorio int    `json:"idRecordatorio"`
+	T_nombre         string `json:"nombre"`
+	T_descripcion    string `json:"descripcion"`
+	Dt_fechaEmision  string `json:"fechaEmision"`
+}
+type NewNotificacion struct {
+	T_nombre        string `json:"nombre"`
+	T_descripcion   string `json:"descripcion"`
+	Dt_fechaEmision string `json:"fechaEmision"`
+	N_idToDoList    int    `json:"idToDoList"`
+}
+type NewCorreo struct {
+	T_asunto        string `json:"asunto"`
+	T_contenido     string `json:"contenido"`
+	Dt_fechaEmision string `json:"fechaEmision"`
+	N_idToDoList    int    `json:"idToDoList"`
+}
 
 func apiKeyAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -206,8 +226,8 @@ func apiKeyAuth() gin.HandlerFunc {
 	}
 }
 func main() {
-	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	//err := godotenv.Load() // Load enviorement variables
+	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
@@ -260,12 +280,18 @@ func main() {
 	router.POST("/addReminder", addReminder)
 	router.POST("/updateReminder", updateReminderById)
 	router.POST("/deleteOrRecoverReminder", deleteOrRecoverReminder)
+
+	//	Notificaciones y correos
+	router.GET("/GetNotifications/:id", GetNotificaciones)
+	router.POST("/addNotification", addNotificacion)
+	router.POST("/addCorreo", addCorreo)
+
 	//	LDAP
 	router.POST("/auth", auth)
 	router.POST("/addauthuser", createUser)
 
-	//router.Run("0.0.0.0:3913") // The port number for expone the API
-	router.Run(":8080")
+	router.Run("0.0.0.0:3913") // The port number for expone the API
+	//router.Run(":8080")
 
 }
 func method(c *gin.Context) {}
@@ -1282,6 +1308,133 @@ func deleteOrRecoverReminder(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",
 		"rowsAffected": rowsAffected,
+	})
+}
+
+//	------------------------ NOTIFICACIONES Y CORREO  ------------------------ //
+
+func GetNotificaciones(c *gin.Context) {
+
+	id_user := c.Param("id")
+
+	//	Consulta
+	rows, err := db.Query(
+		`
+		SELECT * FROM campanitaNotis 
+		WHERE N_idUsuario= (SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?);
+		`,
+		id_user,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	defer rows.Close()
+
+	var notiArray []Notificacion
+
+	//	Escanear y guardar la información de la consulta
+	for rows.Next() {
+		var noti Notificacion
+		err := rows.Scan(
+			&noti.N_idNotificacion,
+			&noti.N_idUsuario,
+			&noti.N_idRecordatorio,
+			&noti.T_nombre,
+			&noti.T_descripcion,
+			&noti.Dt_fechaEmision,
+		)
+
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+		notiArray = append(notiArray, noti)
+	}
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	c.JSON(200, notiArray)
+}
+
+func addNotificacion(c *gin.Context) {
+
+	var notiNewValue NewNotificacion
+
+	//	Se asignan los valores el JSON a la estructura reminderNewValue
+	err := c.BindJSON(&notiNewValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	//	Aquí se hace el llamado al Procedimiento
+	result, err := db.Exec("INSERT INTO Notificaciones (T_nombre, T_descripcion, Dt_fechaEmision, N_idToDoList) VALUES(?, ?, ?, ?)",
+		notiNewValue.T_nombre,
+		notiNewValue.T_descripcion,
+		notiNewValue.Dt_fechaEmision,
+		notiNewValue.N_idToDoList,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "Reminder not found"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Notificacion creada correctamente",
+	})
+}
+
+func addCorreo(c *gin.Context) {
+	var correoNewValue NewCorreo
+
+	//	Se asignan los valores el JSON a la estructura reminderNewValue
+	err := c.BindJSON(&correoNewValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	//	Aquí se hace el llamado al Procedimiento
+	result, err := db.Exec("INSERT INTO Correos (T_asunto, T_contenido, Dt_fechaEmision, N_idToDoList) VALUES (?, ?, ?, ?)",
+		correoNewValue.T_asunto,
+		correoNewValue.T_contenido,
+		correoNewValue.Dt_fechaEmision,
+		correoNewValue.N_idToDoList,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "Reminder not found"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Correo creado correctamente",
 	})
 }
 
