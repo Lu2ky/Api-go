@@ -1532,32 +1532,38 @@ func GetUserInfo(c *gin.Context) {
 
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
+
 func auth(c *gin.Context) {
-	var User UserAuth
-	err := c.BindJSON(&User)
-	var userstring string = User.User
-	JsonData, _:=getUserById(userstring)
-	token, userU, err2 := ConnectLDAP(User.User, User.Pass, JWTManager{
-		Secret: []byte(os.Getenv("JWT_SECRET")),
-		TTL:    24 * time.Hour,
-		Issuer: "horario_estudiantes",
-	})
-	if err != nil {
-		c.JSON(400, gin.H{"error": "formato invalido de json"})
-		return
-	}
+    var User UserAuth
+    err := c.BindJSON(&User)
+    if err != nil {
+        c.JSON(400, gin.H{"error": "formato invalido de json"})
+        return
+    }
 
-	if err2 != nil {
-		log.Printf("ldap error: %v", err2)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-	c.JSON(200, gin.H{
-		"Token":    token,
-		"UserAuth": userU,
-		"Info":  JsonData,
-	})
+    JsonData, err := getUserById(User.User)
+    if err != nil {
+        log.Printf("db error: %v", err)
+        c.JSON(500, gin.H{"error": "Internal server error"})
+        return
+    }
 
+    token, userU, err := ConnectLDAP(User.User, User.Pass, JWTManager{
+        Secret: []byte(os.Getenv("JWT_SECRET")),
+        TTL:    24 * time.Hour,
+        Issuer: "horario_estudiantes",
+    })
+    if err != nil {
+        log.Printf("ldap error: %v", err)
+        c.JSON(500, gin.H{"error": "Internal server error"})
+        return
+    }
+
+    c.JSON(200, gin.H{
+        "Token":    token,
+        "UserAuth": userU,
+        "Info":     JsonData,
+    })
 }
 
 func (j JWTManager) Generate(u *User) (string, error) {
