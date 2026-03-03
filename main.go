@@ -331,16 +331,14 @@ func method(c *gin.Context) {}
 	Aquí está explicado un método el método GET para obtener las actividades oficiales.
 */
 func getUserById(id string){
-	rows, err := db.Query("SELECT * FROM Usuarios WHERE N__codUsuario = ?", id)
+	rows, err := db.Query("SELECT * FROM Usuarios WHERE N__codUsuario = ?", id);
 	if err != nil {
-		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
+		return nil;
 	}
-	defer rows.Close()
-	var user UserByDB
-	err = rows.Scan(&user.N_idUsuario, &user.T_nombre, &user.T_correo, &user.N_idTipo, &user.N_semestreActual, &user.T_programa, &user.N_temas, &user.T_codUsuario, &user.TM_antelacionNotis)
-	return user
+	defer rows.Close();
+	var user UserByDB;
+	err = rows.Scan(&user.N_idUsuario, &user.T_nombre, &user.T_correo, &user.N_idTipo, &user.N_semestreActual, &user.T_programa, &user.N_temas, &user.T_codUsuario, &user.TM_antelacionNotis);
+	return user;
 }
 func getOfficialScheduleByUserId(c *gin.Context) {
 	//	este ID sale de la URL | /GetOfficialScheduleByUserId/:id
