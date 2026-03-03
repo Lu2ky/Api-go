@@ -25,6 +25,18 @@ var db *sql.DB
 
 //Pruebita
 /* Saving the session of MySQL, this is global for the access in all methods */
+
+type UserByDB{
+	N_idUsuario int `json:"N_idUsuario"`
+	T_nombre string `json:"T_nombre"`
+	T_correo sql.NullString `json:"T_correo"`
+	N_idTipo int `json:"N_idTipo"`
+	N_semestreActual int `json:"N_semestreActual"`
+	T_programa string `json:"T_programa"`
+	N_temas sql.NullInt64 `json:"N_temas"`
+	T_codUsuario string `json:"T_codUsuario"`
+	TM_antelacionNotis string `json:"TM_antelacionNotis"`
+}
 type User struct {
 	Username string
 	Roles    []string
@@ -306,7 +318,18 @@ func method(c *gin.Context) {}
 
 	Aquí está explicado un método el método GET para obtener las actividades oficiales.
 */
-
+func getUserById(id string){
+	rows, err := dbQuery("SELECT * FROM Usuarios WHERE N__codUsuario = ?", id)
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	defer rows.Close()
+	var user UserByDB
+	err = rows.Scan(&user.N_idUsuario, &user.T_nombre, &user.T_correo, &user.N_idTipo, &user.N_semestreActual, &user.T_programa, &user.N_temas, &user.T_codUsuario, &user.TM_antelacionNotis)
+	c.JSON(200, user)
+}
 func getOfficialScheduleByUserId(c *gin.Context) {
 	//	este ID sale de la URL | /GetOfficialScheduleByUserId/:id
 	//	Param() se encarga de extraer los parámetros definidos en la ruta.
@@ -1443,6 +1466,7 @@ func addCorreo(c *gin.Context) {
 func auth(c *gin.Context) {
 	var User UserAuth
 	err := c.BindJSON(&User)
+	JsonData:=getUserByUsername(User.User)
 	token, userU, err2 := ConnectLDAP(User.User, User.Pass, JWTManager{
 		Secret: []byte(os.Getenv("JWT_SECRET")),
 		TTL:    24 * time.Hour,
@@ -1461,6 +1485,7 @@ func auth(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"Token":    token,
 		"UserAuth": userU,
+		"Info":  JsonData
 	})
 
 }
