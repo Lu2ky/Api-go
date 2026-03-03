@@ -330,7 +330,7 @@ func method(c *gin.Context) {}
 
 	Aquí está explicado un método el método GET para obtener las actividades oficiales.
 */
-func getUserById(id string)(*UserByDB, error){
+func getUserById(id string)(UserByDB, error){
 	rows, err := db.Query("SELECT * FROM Usuarios WHERE N__codUsuario = ?", id);
 	if err != nil {
 		return nil,err;
