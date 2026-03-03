@@ -215,6 +215,14 @@ type NewCorreo struct {
 	Dt_fechaEmision string `json:"fechaEmision"`
 	N_idToDoList    int    `json:"idToDoList"`
 }
+type UserData struct {
+	N_idUsuario        int     `json:"idUsuario"`
+	T_nombre           *string `json:"nombre"`
+	T_correo           *string `json:"correo"`
+	N_semestreActual   *int    `json:"semestreActual"`
+	T_programa         *string `json:"programa"`
+	TM_antelacionNotis *string `json:"antelacionNotis"`
+}
 
 func apiKeyAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -298,12 +306,16 @@ func main() {
 	router.POST("/addNotification", addNotificacion)
 	router.POST("/addCorreo", addCorreo)
 
+	//	Configuracion de usuario
+	router.GET("/GetUserInfo/:id", GetUserInfo)
+	//router.GET("/GetUserInfo/:id", GetUserInfo)
+
 	//	LDAP
 	router.POST("/auth", auth)
 	router.POST("/addauthuser", createUser)
 
-	//router.Run("0.0.0.0:3913") // The port number for expone the API
-	router.Run("0.0.0.0:8080")
+	router.Run("0.0.0.0:8080") // The port number for expone the API
+	//router.Run(":8080")
 
 }
 func method(c *gin.Context) {}
@@ -1459,6 +1471,60 @@ func addCorreo(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Correo creado correctamente",
 	})
+}
+
+//	------------------------ FUNCIONALIDADES DEL USUARIO ------------------------ //
+
+func GetUserInfo(c *gin.Context) {
+
+	id_user := c.Param("id")
+
+	//	Consulta
+	rows, err := db.Query(
+		`
+		SELECT u.N_idUsuario, u.T_nombre, u.T_correo, u.N_semestreActual, u.T_programa, u.TM_antelacionNotis
+		FROM Usuarios u
+		WHERE u.T_codUsuario = ?
+		`,
+		id_user,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	defer rows.Close()
+
+	var userDataArray []UserData
+
+	//	Escanear y guardar la información de la consulta
+	for rows.Next() {
+		var userData UserData
+		err := rows.Scan(
+			&userData.N_idUsuario,
+			&userData.T_nombre,
+			&userData.T_correo,
+			&userData.N_semestreActual,
+			&userData.T_programa,
+			&userData.TM_antelacionNotis,
+		)
+
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+		userDataArray = append(userDataArray, userData)
+	}
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	c.JSON(200, userDataArray)
+
 }
 
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
