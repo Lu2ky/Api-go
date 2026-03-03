@@ -1530,7 +1530,8 @@ func GetUserInfo(c *gin.Context) {
 func auth(c *gin.Context) {
 	var User UserAuth
 	err := c.BindJSON(&User)
-	JsonData:=getUserById(User.User)
+	var userstring string = User.User
+	JsonData:=getUserById(userstring)
 	token, userU, err2 := ConnectLDAP(User.User, User.Pass, JWTManager{
 		Secret: []byte(os.Getenv("JWT_SECRET")),
 		TTL:    24 * time.Hour,
