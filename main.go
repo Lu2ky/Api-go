@@ -1551,7 +1551,7 @@ func auth(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"Token":    token,
 		"UserAuth": userU,
-		"Info":  JsonData
+		"Info":  JsonData,
 	})
 
 }
