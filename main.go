@@ -26,7 +26,7 @@ var db *sql.DB
 //Pruebita
 /* Saving the session of MySQL, this is global for the access in all methods */
 
-type UserByDB{
+type UserByDB struct {
 	N_idUsuario int `json:"N_idUsuario"`
 	T_nombre string `json:"T_nombre"`
 	T_correo sql.NullString `json:"T_correo"`
