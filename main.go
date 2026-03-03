@@ -149,6 +149,20 @@ type Reminders struct {
 	T_Prioridad         string         `json:"T_Prioridad"`
 	B_estado            *bool          `json:"B_estado"`
 }
+type RemindersTag struct {
+	N_idToDoList        int            `json:"N_idToDoList"`
+	N_idUsuario         int            `json:"N_idUsuario"`
+	N_idRecordatorio    int            `json:"N_idRecordatorio"`
+	T_nombre            string         `json:"T_nombre"`
+	T_descripcion       sql.NullString `json:"T_descripcion"`
+	Dt_fechaVencimiento sql.NullString `json:"Dt_fechaVencimiento"`
+	B_isDeleted         *bool          `json:"B_isDeleted"`
+	T_Prioridad         string         `json:"T_Prioridad"`
+	B_estado            *bool          `json:"B_estado"`
+	N_idEtiqueta        *int           `json:"N_idEtiqueta"`
+	T_tag_nombre        *string        `json:"T_tag_nombre"`
+	B_tag_isDeleted     *bool          `json:"B_tag_isDeleted"`
+}
 type ReminderNewValue struct {
 	P_usuario     int     `json:"P_usuario"`
 	P_nombre      string  `json:"P_nombre"`
@@ -196,6 +210,11 @@ type NewNotificacion struct {
 	T_descripcion   string `json:"descripcion"`
 	Dt_fechaEmision string `json:"fechaEmision"`
 	N_idToDoList    int    `json:"idToDoList"`
+}
+type MuteNotification struct {
+	P_idUsuario       int     `json:"idUsuario"`
+	P_correo          *string `json:"correo"`
+	P_antelacionNotis string  `json:"antelacionNotis"`
 }
 type NewCorreo struct {
 	T_asunto        string `json:"asunto"`
@@ -285,6 +304,7 @@ func main() {
 
 	//	Recordatorios
 	router.GET("/GetReminders/:id", GetRemindersByUserId)
+	router.GET("/GetRemindersTags/:id", GetRemindersTagsByUserId)
 	router.POST("/addReminder", addReminder)
 	router.POST("/updateReminder", updateReminderById)
 	router.POST("/deleteOrRecoverReminder", deleteOrRecoverReminder)
@@ -292,6 +312,7 @@ func main() {
 	//	Notificaciones y correos
 	router.GET("/GetNotifications/:id", GetNotificaciones)
 	router.POST("/addNotification", addNotificacion)
+	router.POST("/muteNotification", muteNotification)
 	router.POST("/addCorreo", addCorreo)
 
 	//	Configuracion de usuario
@@ -1109,6 +1130,63 @@ func deleteTag(c *gin.Context) {
 }
 
 //	--------------- Recordatorios ----------------------------------------
+//
+// Obtener la lista de los recordatorios
+func GetRemindersTagsByUserId(c *gin.Context) {
+
+	//	Id del usuario
+	id_User := c.Param("id")
+
+	//	Consulta
+	rows, err := db.Query(
+		`
+		SELECT * FROM RecordatoriosCompletos WHERE N_idUsuario=(SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario= ?)
+		`,
+		id_User,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	defer rows.Close()
+
+	var remindersArray []RemindersTag
+
+	//	Escanear y guardar la información de la consulta
+	for rows.Next() {
+		var reminder RemindersTag
+		err := rows.Scan(
+			&reminder.N_idToDoList,
+			&reminder.N_idUsuario,
+			&reminder.N_idRecordatorio,
+			&reminder.T_nombre,
+			&reminder.T_descripcion,
+			&reminder.Dt_fechaVencimiento,
+			&reminder.B_isDeleted,
+			&reminder.T_Prioridad,
+			&reminder.B_estado,
+			&reminder.N_idEtiqueta,
+			&reminder.T_tag_nombre,
+			&reminder.B_tag_isDeleted,
+		)
+
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+		remindersArray = append(remindersArray, reminder)
+	}
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	c.JSON(200, remindersArray)
+}
 
 // Obtener la lista de los recordatorios
 func GetRemindersByUserId(c *gin.Context) {
@@ -1410,6 +1488,43 @@ func addNotificacion(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Notificacion creada correctamente",
+	})
+}
+
+func muteNotification(c *gin.Context) {
+
+	var notiNewValue MuteNotification
+
+	//	Se asignan los valores el JSON a la estructura reminderNewValue
+	err := c.BindJSON(&notiNewValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	//	Aquí se hace el llamado al Procedimiento
+	result, err := db.Exec("CALL configuracion_notificaciones(?, ?, ?);",
+		notiNewValue.P_idUsuario,
+		notiNewValue.P_correo,
+		notiNewValue.P_antelacionNotis,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(200, gin.H{"message": "No hubo cambios"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Notificacion MUTEADA correctamente",
 	})
 }
 
