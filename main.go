@@ -333,12 +333,17 @@ func method(c *gin.Context) {}
 func getUserById(id string){
 	rows, err := db.Query("SELECT * FROM Usuarios WHERE N__codUsuario = ?", id);
 	if err != nil {
-		return nil;
+		return nil,err;
 	}
 	defer rows.Close();
 	var user UserByDB;
-	err = rows.Scan(&user.N_idUsuario, &user.T_nombre, &user.T_correo, &user.N_idTipo, &user.N_semestreActual, &user.T_programa, &user.N_temas, &user.T_codUsuario, &user.TM_antelacionNotis);
-	return user;
+	if rows.Next() {
+		err = rows.Scan(&user.N_idUsuario, &user.T_nombre, &user.T_correo, &user.N_idTipo, &user.N_semestreActual, &user.T_programa, &user.N_temas, &user.T_codUsuario, &user.TM_antelacionNotis);
+	}
+	if err!=nil{
+		return nil,err;
+	}
+	return user,nil;
 }
 func getOfficialScheduleByUserId(c *gin.Context) {
 	//	este ID sale de la URL | /GetOfficialScheduleByUserId/:id
