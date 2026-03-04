@@ -1340,6 +1340,8 @@ func addReminder(c *gin.Context) {
 		reminderNewValue.P_tag4,
 		reminderNewValue.P_tag5,
 	)
+	id_captured := result.LastInsertId()
+	log.Printf("ID del recordatorio creado: %d", id_captured)
 
 	if err != nil {
 		log.Printf("Database error: %v", err)
@@ -1356,6 +1358,7 @@ func addReminder(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Recordatorio creado correctamente",
+		"InsertedId": id_captured,
 	})
 }
 
