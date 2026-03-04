@@ -1336,52 +1336,37 @@ func addReminder(c *gin.Context) {
 	defer tx.Rollback()
 
 	// Aquí se hace el llamado al Procedimiento
-	result, err := tx.Exec("CALL crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		reminderNewValue.P_usuario,
-		reminderNewValue.P_nombre,
-		reminderNewValue.P_descripcion,
-		reminderNewValue.P_fecha,
-		reminderNewValue.P_prioridad,
-		reminderNewValue.P_tag1,
-		reminderNewValue.P_tag2,
-		reminderNewValue.P_tag3,
-		reminderNewValue.P_tag4,
-		reminderNewValue.P_tag5,
-	)
-	if err != nil {
-		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Reminder not found"})
-		return
-	}
-
-	// Obtener el último ID en la misma conexión/transacción
 	var newID int64
-	err = tx.QueryRow("SELECT LAST_INSERT_ID()").Scan(&newID)
+	err = tx.QueryRow("CALL crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    reminderNewValue.P_usuario,
+    reminderNewValue.P_nombre,
+    reminderNewValue.P_descripcion,
+    reminderNewValue.P_fecha,
+    reminderNewValue.P_prioridad,
+    reminderNewValue.P_tag1,
+    reminderNewValue.P_tag2,
+    reminderNewValue.P_tag3,
+    reminderNewValue.P_tag4,
+    reminderNewValue.P_tag5,
+	).Scan(&newID)
 	if err != nil {
-		log.Printf("Error al obtener last insert ID: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
+	    log.Printf("Database error: %v", err)
+ 	   c.JSON(500, gin.H{"error": "Internal server error"})
+ 	   return
 	}
+// Confirmar la transacción
+if err = tx.Commit(); err != nil {
+    log.Printf("Error al confirmar transacción: %v", err)
+    c.JSON(500, gin.H{"error": "Internal server error"})
+    return
+}
 
-	// Confirmar la transacción
-	if err = tx.Commit(); err != nil {
-		log.Printf("Error al confirmar transacción: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
+log.Printf("ID del recordatorio creado: %d", newID)
 
-	log.Printf("ID del recordatorio creado: %d", newID)
-
-	c.JSON(200, gin.H{
-		"message":    "Recordatorio creado correctamente",
-		"InsertedId": newID,
-	})
+c.JSON(200, gin.H{
+    "message":    "Recordatorio creado correctamente",
+    "InsertedId": newID,
+})	
 }
 
 // Procedimiento: Actualizar recordatorio
