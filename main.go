@@ -1304,7 +1304,7 @@ func GetRemindersByUserId(c *gin.Context) {
 func addReminder(c *gin.Context) {
 	var reminderNewValue ReminderNewValue
 
-	// Se asignan los valores el JSON a la estructura reminderNewValue
+	// Se asignan los valores del JSON a la estructura reminderNewValue
 	err := c.BindJSON(&reminderNewValue)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
@@ -1336,7 +1336,6 @@ func addReminder(c *gin.Context) {
 	defer tx.Rollback()
 
 	// Aquí se hace el llamado al Procedimiento
-// Aquí se hace el llamado al Procedimiento
 	rows, err := tx.Query("CALL crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		reminderNewValue.P_usuario,
 		reminderNewValue.P_nombre,
@@ -1348,7 +1347,7 @@ func addReminder(c *gin.Context) {
 		reminderNewValue.P_tag3,
 		reminderNewValue.P_tag4,
 		reminderNewValue.P_tag5,
-	)//lol
+	)
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
@@ -1357,16 +1356,20 @@ func addReminder(c *gin.Context) {
 	defer rows.Close()
 
 	var newID int64
+
+	// Navegar por todos los result sets hasta encontrar el que tiene el ID
 	for {
-    if rows.Next() {
-        err = rows.Scan(&newID)
-        if err != nil {
-            log.Printf("Error al leer resultado: %v", err)
-        }
-    }
-    if !rows.NextResultSet() {
-        break
-    }
+		if rows.Next() {
+			err = rows.Scan(&newID)
+			if err != nil {
+				log.Printf("Error al leer resultado: %v", err)
+			}
+		}
+		if !rows.NextResultSet() {
+			break
+		}
+	} // <-- el for cierra aquí
+
 	if err = rows.Err(); err != nil {
 		log.Printf("Error en rows: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
@@ -1386,7 +1389,6 @@ func addReminder(c *gin.Context) {
 		"message":    "Recordatorio creado correctamente",
 		"InsertedId": newID,
 	})
-	}
 }
 
 // Procedimiento: Actualizar recordatorio
