@@ -1336,24 +1336,36 @@ func addReminder(c *gin.Context) {
 	defer tx.Rollback()
 
 	// Aquí se hace el llamado al Procedimiento
-	var newID int64
-	err = tx.QueryRow("CALL crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    reminderNewValue.P_usuario,
-    reminderNewValue.P_nombre,
-    reminderNewValue.P_descripcion,
-    reminderNewValue.P_fecha,
-    reminderNewValue.P_prioridad,
-    reminderNewValue.P_tag1,
-    reminderNewValue.P_tag2,
-    reminderNewValue.P_tag3,
-    reminderNewValue.P_tag4,
-    reminderNewValue.P_tag5,
-	).Scan(&newID)
+// Aquí se hace el llamado al Procedimiento
+	rows, err := tx.Query("CALL crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		reminderNewValue.P_usuario,
+		reminderNewValue.P_nombre,
+		reminderNewValue.P_descripcion,
+		reminderNewValue.P_fecha,
+		reminderNewValue.P_prioridad,
+		reminderNewValue.P_tag1,
+		reminderNewValue.P_tag2,
+		reminderNewValue.P_tag3,
+		reminderNewValue.P_tag4,
+		reminderNewValue.P_tag5,
+	)//lol
 	if err != nil {
-	    log.Printf("Database error: %v", err)
- 	   c.JSON(500, gin.H{"error": "Internal server error"})
- 	   return
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
 	}
+	defer rows.Close()
+
+	var newID int64
+	if rows.Next() {
+		err = rows.Scan(&newID)
+		if err != nil {
+			log.Printf("Error al leer ID: %v", err)
+			c.JSON(500, gin.H{"error": "Internal server error"})
+			return
+		}
+}
+
 // Confirmar la transacción
 if err = tx.Commit(); err != nil {
     log.Printf("Error al confirmar transacción: %v", err)
@@ -1366,7 +1378,7 @@ log.Printf("ID del recordatorio creado: %d", newID)
 c.JSON(200, gin.H{
     "message":    "Recordatorio creado correctamente",
     "InsertedId": newID,
-})	
+})
 }
 
 // Procedimiento: Actualizar recordatorio
