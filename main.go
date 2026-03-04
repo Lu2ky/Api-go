@@ -1357,28 +1357,36 @@ func addReminder(c *gin.Context) {
 	defer rows.Close()
 
 	var newID int64
-	if rows.Next() {
-		err = rows.Scan(&newID)
-		if err != nil {
-			log.Printf("Error al leer ID: %v", err)
-			c.JSON(500, gin.H{"error": "Internal server error"})
-			return
-		}
-}
+	for {
+    if rows.Next() {
+        err = rows.Scan(&newID)
+        if err != nil {
+            log.Printf("Error al leer resultado: %v", err)
+        }
+    }
+    if !rows.NextResultSet() {
+        break
+    }
+	if err = rows.Err(); err != nil {
+		log.Printf("Error en rows: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
 
-// Confirmar la transacción
-if err = tx.Commit(); err != nil {
-    log.Printf("Error al confirmar transacción: %v", err)
-    c.JSON(500, gin.H{"error": "Internal server error"})
-    return
-}
+	// Confirmar la transacción
+	if err = tx.Commit(); err != nil {
+		log.Printf("Error al confirmar transacción: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
 
-log.Printf("ID del recordatorio creado: %d", newID)
+	log.Printf("ID del recordatorio creado: %d", newID)
 
-c.JSON(200, gin.H{
-    "message":    "Recordatorio creado correctamente",
-    "InsertedId": newID,
-})
+	c.JSON(200, gin.H{
+		"message":    "Recordatorio creado correctamente",
+		"InsertedId": newID,
+	})
+	}
 }
 
 // Procedimiento: Actualizar recordatorio
