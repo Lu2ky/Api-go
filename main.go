@@ -1336,7 +1336,7 @@ func addReminder(c *gin.Context) {
 	defer tx.Rollback()
 
 	// Aquí se hace el llamado al Procedimiento
-	rows, err := tx.Query("CALL crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	rows, err := tx.Query("SELECT crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		reminderNewValue.P_usuario,
 		reminderNewValue.P_nombre,
 		reminderNewValue.P_descripcion,
