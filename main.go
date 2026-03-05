@@ -26,7 +26,6 @@ var db *sql.DB
 //Pruebita
 /* Saving the session of MySQL, this is global for the access in all methods */
 
-
 type User struct {
 	Username string
 	Roles    []string
@@ -233,6 +232,25 @@ type UserData struct {
 	TM_antelacionNotis *string `json:"antelacionNotis"`
 }
 
+type ImportSchedule struct {
+	Nombre           string `json:"nombre"`
+	Semestre         int    `json:"semestre"`
+	Programa         string `json:"programa"`
+	CodUSuario       string `json:"codUsuario"`
+	Nrc              string `json:"nrc"`
+	NombreCurso      string `json:"nombreCurso"`
+	Docente          string `json:"docente"`
+	Creditos         int    `json:"creditos"`
+	ModoCalificar    string `json:"modoCalificar"`
+	Campus           string `json:"campus"`
+	TipoCurso        string `json:"tipoCurso"`
+	Dia              int    `json:"dia"`
+	HoraInicio       string `json:"horaInicio"`
+	HoraFin          string `json:"horaFin"`
+	Salon            string `json:"salon"`
+	PeriodoAcademico string `json:"periodoAcademico"`
+}
+
 func apiKeyAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey := c.GetHeader("X-API-Key")
@@ -255,8 +273,8 @@ func apiKeyAuth() gin.HandlerFunc {
 	}
 }
 func main() {
-	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	err := godotenv.Load() // Load enviorement variables
+	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	//err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
@@ -317,6 +335,9 @@ func main() {
 	router.POST("/addNotification", addNotificacion)
 	router.POST("/muteNotification", muteNotification)
 	router.POST("/addCorreo", addCorreo)
+
+	// Importar horario
+	router.POST("/importSchedule", importSchedule)
 
 	//	Configuracion de usuario
 	router.GET("/GetUserInfo/:id", GetUserInfo)
@@ -1383,7 +1404,7 @@ func addReminder(c *gin.Context) {
 		return
 	}
 
-	log.Printf("ID del recordatorio creado: %d", newID)
+	log.Printf("ID del ToDo creado: %d", newID)
 
 	c.JSON(200, gin.H{
 		"message":    "Recordatorio creado correctamente",
@@ -1641,6 +1662,81 @@ func addCorreo(c *gin.Context) {
 	})
 }
 
+// -------------------------- IMPORTAR HORARIO ----------------------------------
+
+func importSchedule(c *gin.Context) {
+	var newScheduleValue ImportSchedule
+
+	err := c.BindJSON(&newScheduleValue)
+	if err != nil {
+		c.JSON(400, gin.H{"Error": "Formato invalido de json"})
+		return
+
+	}
+
+	/*
+
+		type ImportSchedule struct {
+			Nombre           string `json:"nombre"`
+			Semestre         int    `json:"semestre"`
+			Programa         string `json:"programa"`
+			CodUSuario       string `json:"codUsuario"`
+			Nrc              string `json:"nrc"`
+			NombreCurso      string `json:"nombreCurso"`
+			Docente          string `json:"docente"`
+			Creditos         int    `json:"creditos"`
+			ModoCalificar    string `json:"modoCalificar"`
+			Campus           string `json:"campus"`
+			TipoCurso        string `json:"tipoCurso"`
+			Dia              int    `json:"dia"`
+			HoraInicio       string `json:"horaInicio"`
+			HoraFin          string `json:"horaFin"`
+			Salon            string `json:"salon"`
+			PeriodoAcademico string `json:"periodoAcademico"`
+		}
+
+	*/
+
+	result, err := db.Exec("CALL importarHorario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+		newScheduleValue.Nombre,
+		newScheduleValue.Semestre,
+		newScheduleValue.Programa,
+		newScheduleValue.CodUSuario,
+		newScheduleValue.Nrc,
+		newScheduleValue.NombreCurso,
+		newScheduleValue.Docente,
+		newScheduleValue.Creditos,
+		newScheduleValue.ModoCalificar,
+		newScheduleValue.Campus,
+		newScheduleValue.TipoCurso,
+		newScheduleValue.Dia,
+		newScheduleValue.HoraInicio,
+		newScheduleValue.HoraFin,
+		newScheduleValue.Salon,
+		newScheduleValue.PeriodoAcademico,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "No se encuentra el archivo a importar"})
+		return
+
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Horario importado correctamente",
+	})
+
+}
+
 //	------------------------ FUNCIONALIDADES DEL USUARIO ------------------------ //
 
 func GetUserInfo(c *gin.Context) {
@@ -1697,29 +1793,28 @@ func GetUserInfo(c *gin.Context) {
 
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
-
 func auth(c *gin.Context) {
-    var User UserAuth
-    err := c.BindJSON(&User)
-    if err != nil {
-        c.JSON(400, gin.H{"error": "formato invalido de json"})
-        return
-    }
-    token, userU, err := ConnectLDAP(User.User, User.Pass, JWTManager{
-        Secret: []byte(os.Getenv("JWT_SECRET")),
-        TTL:    24 * time.Hour,
-        Issuer: "horario_estudiantes",
-    })
-    if err != nil {
-        log.Printf("ldap error: %v", err)
-        c.JSON(500, gin.H{"error": "Internal server error"})
-        return
-    }
+	var User UserAuth
+	err := c.BindJSON(&User)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+	token, userU, err := ConnectLDAP(User.User, User.Pass, JWTManager{
+		Secret: []byte(os.Getenv("JWT_SECRET")),
+		TTL:    24 * time.Hour,
+		Issuer: "horario_estudiantes",
+	})
+	if err != nil {
+		log.Printf("ldap error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
 
-    c.JSON(200, gin.H{
-        "Token":    token,
-        "UserAuth": userU,
-    })
+	c.JSON(200, gin.H{
+		"Token":    token,
+		"UserAuth": userU,
+	})
 }
 
 func (j JWTManager) Generate(u *User) (string, error) {
