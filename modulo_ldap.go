@@ -249,6 +249,13 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 }
 
 func createAdmin(c *gin.Context) {
+	var req UserAuth
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON inválido"})
+		return
+	}
+
 	err := CreateLDAPAdminUser(
 		os.Getenv("ADMIN_LDAP_ADMIN"),
 		os.Getenv("ADMIN_LDAP_PASS"),
