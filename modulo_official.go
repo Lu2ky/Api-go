@@ -101,3 +101,64 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
 	c.JSON(200, ofcschedules)
 }
+
+func getActivitiesTimesData(c *gin.Context) {
+	var checkActTime CheckActivitiesTimesData
+
+	err := c.BindJSON(&checkActTime)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	rows, err := db.Query(
+		`
+		SELECT * FROM HorarioCompleto 
+		WHERE N_idUsuario = (SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?) AND N_dia = ?
+		`, checkActTime.T_codUsuario, checkActTime.N_dia)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	defer rows.Close()
+
+	//	Aquí se van a almacenar los resultados de la consulta.
+	//	Se utiiza el OfficialSchedule para tener una estructura a la hora de guardar la información de la consulta.
+
+	var actTimeArr []ActivitiesTimesData
+
+	for rows.Next() {
+		var actTime ActivitiesTimesData
+		err := rows.Scan(
+			&actTime.N_iduser,
+			&actTime.N_idcourse,
+			&actTime.N_dia,
+			&actTime.StartHour,
+			&actTime.EndHour,
+			&actTime.FechaInicio,
+			&actTime.FechaFinal,
+		)
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+
+		//	Y aquí se agrega el objeto ofcschedule al arreglo ofcschedules.
+		actTimeArr = append(actTimeArr, actTime)
+	}
+
+	//	Se verifica si hubo errores mientras se hizo la iteración usando rows.Err().
+	//	Si Next() retorna False, entonces para revisar cuál fue el error se usa rows.Err()
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
+	c.JSON(200, actTimeArr)
+}
