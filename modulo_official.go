@@ -113,9 +113,8 @@ func getActivitiesTimesData(c *gin.Context) {
 
 	rows, err := db.Query(
 		`
-		SELECT * FROM HorarioCompleto 
-		WHERE N_idUsuario = (SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?) AND N_dia = ?
-		`, checkActTime.T_codUsuario, checkActTime.N_dia)
+		SELECT * FROM HorarioCompleto WHERE N_idUsuario = ? AND N_dia = ?
+		`, checkActTime.T_idUsuario, checkActTime.N_dia)
 
 	if err != nil {
 		log.Printf("Database error: %v", err)
