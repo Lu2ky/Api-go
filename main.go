@@ -88,6 +88,7 @@ func main() {
 	router.POST("/auth", auth)
 	router.POST("/addauthuser", createUser)
 	router.POST("/addadmin", createAdmin)
+	router.POST("/changepassword", ChangeUserPassword)
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
