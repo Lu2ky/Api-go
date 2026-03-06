@@ -139,6 +139,7 @@ func getActivitiesTimesData(c *gin.Context) {
 			&actTime.EndHour,
 			&actTime.FechaInicio,
 			&actTime.FechaFinal,
+			&actTime.IsDeleted,
 		)
 		if err != nil {
 			log.Printf("Scan error: %v", err)

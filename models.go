@@ -48,6 +48,7 @@ type ActivitiesTimesData struct {
 	EndHour     *string `json:"EndHour"`
 	FechaInicio *string `json:"FechaInicio"`
 	FechaFinal  *string `json:"FechaFinal"`
+	IsDeleted   *bool   `json:"IsDeleted"`
 }
 
 type OfficialSchedule struct {
@@ -231,6 +232,7 @@ type UserData struct {
 	N_semestreActual   *int    `json:"semestreActual"`
 	T_programa         *string `json:"programa"`
 	TM_antelacionNotis *string `json:"antelacionNotis"`
+	N_celular          *string `json:"celular"`
 }
 
 type ImportSchedule struct {

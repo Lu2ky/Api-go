@@ -15,7 +15,7 @@ func GetUserInfo(c *gin.Context) {
 	//	Consulta
 	rows, err := db.Query(
 		`
-		SELECT u.N_idUsuario, u.T_nombre, u.T_correo, u.N_semestreActual, u.T_programa, u.TM_antelacionNotis
+		SELECT u.N_idUsuario, u.T_nombre, u.T_correo, u.N_semestreActual, u.T_programa, u.TM_antelacionNotis, u.N_celular
 		FROM Usuarios u
 		WHERE u.T_codUsuario = ?
 		`,
@@ -41,6 +41,7 @@ func GetUserInfo(c *gin.Context) {
 			&userData.N_semestreActual,
 			&userData.T_programa,
 			&userData.TM_antelacionNotis,
+			&userData.N_celular,
 		)
 
 		if err != nil {
