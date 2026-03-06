@@ -36,8 +36,8 @@ type Claims struct {
 
 // ESTO ES PARA LAS COLISIONES
 type CheckActivitiesTimesData struct {
-	T_codUsuario string `json:"codUsuario"`
-	N_dia        int    `json:"dia"`
+	T_idUsuario int `json:"idUsuario"`
+	N_dia       int `json:"dia"`
 }
 
 type ActivitiesTimesData struct {
