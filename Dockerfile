@@ -1,9 +1,9 @@
 FROM golang:1.26.0-alpine3.23 AS builder
 
 WORKDIR /app
-COPY * .
+COPY . .
 RUN go mod tidy
-RUN go build ./main.go
+RUN go build -o main .
 
 
 FROM alpine:latest
