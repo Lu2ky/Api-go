@@ -1665,10 +1665,13 @@ func addCorreo(c *gin.Context) {
 // -------------------------- IMPORTAR HORARIO ----------------------------------
 
 func importSchedule(c *gin.Context) {
+
+	log.Println("Inicio importacion de horario")
 	var newScheduleValue ImportSchedule
 
 	err := c.BindJSON(&newScheduleValue)
 	if err != nil {
+		log.Printf("Error: formato inválido de JSON: %v", err)
 		c.JSON(400, gin.H{"Error": "Formato invalido de json"})
 		return
 
@@ -1697,6 +1700,11 @@ func importSchedule(c *gin.Context) {
 
 	*/
 
+	
+	log.Printf("Usuario: %s", newScheduleValue.CodUSuario)
+	log.Printf("Curso: %s | NRC: %s", newScheduleValue.NombreCurso, newScheduleValue.Nrc)
+	log.Printf("Programa: %s | Semestre: %d", newScheduleValue.Programa, newScheduleValue.Semestre)
+
 	result, err := db.Exec("CALL importarHorario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		newScheduleValue.Nombre,
 		newScheduleValue.Semestre,
@@ -1717,19 +1725,24 @@ func importSchedule(c *gin.Context) {
 	)
 
 	if err != nil {
-		log.Printf("Database error: %v", err)
+		log.Printf("Database error al ejecutar importarHorario: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 
 	}
 
 	rowsAffected, _ := result.RowsAffected()
+	log.Printf("Registros afectados: %d", rowsAffected)
 
 	if rowsAffected == 0 {
+		log.Println("No se encontró información para importar")
 		c.JSON(404, gin.H{"error": "No se encuentra el archivo a importar"})
 		return
 
 	}
+
+	log.Println("Importación completada correctamente")
+	log.Println("Fin importacion de horario")
 
 	c.JSON(200, gin.H{
 		"message": "Horario importado correctamente",
