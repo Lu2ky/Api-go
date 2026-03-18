@@ -345,6 +345,26 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 	return nil
 }
 
+func changeusrpasswd(c *gin.Context){
+	var req UserAuth
+	
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON inválido"})
+		return
+	}
+	err := ChangeUserPassword(
+		os.Getenv("ADMIN_LDAP_ADMIN"),
+		os.Getenv("ADMIN_LDAP_PASS"),
+		req.User,
+		req.Pass,
+	)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})	
+}
+
 // Last test for today :P -Luky (CI/CD test)
 func ChangeUserPassword(adminUser, adminPass, username, newPassword string) error {
 	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
