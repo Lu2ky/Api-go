@@ -345,4 +345,53 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 	return nil
 }
 
+func changeusrpasswd(c *gin.Context){
+	var req UserAuth
+	
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON inválido"})
+		return
+	}
+	err := ChangeUserPassword(
+		os.Getenv("ADMIN_LDAP_ADMIN"),
+		os.Getenv("ADMIN_LDAP_PASS"),
+		req.User,
+		req.Pass,
+	)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})	
+}
+
 // Last test for today :P -Luky (CI/CD test)
+func ChangeUserPassword(adminUser, adminPass, username, newPassword string) error {
+	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	if err != nil {
+		return err
+	}
+	defer l.Close()
+	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+	if err != nil {
+		return err
+	}
+	err = l.Bind(adminUser+"@adhe.local", adminPass)
+	if err != nil {
+		return err
+	}
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=adhe,DC=local", username)
+	quotedPwd := fmt.Sprintf("\"%s\"", newPassword)
+	utf16Pwd := utf16.Encode([]rune(quotedPwd))
+	pwdBytes := make([]byte, len(utf16Pwd)*2)
+	for i, v := range utf16Pwd {
+		binary.LittleEndian.PutUint16(pwdBytes[i*2:], v)
+	}
+	modPwd := ldap.NewModifyRequest(userDN, nil)
+	modPwd.Replace("unicodePwd", []string{string(pwdBytes)})
+	err = l.Modify(modPwd)
+	if err != nil {
+		return fmt.Errorf("error cambiando password: %v", err)
+	}
+	return nil
+}

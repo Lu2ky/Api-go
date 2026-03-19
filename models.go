@@ -34,6 +34,23 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// ESTO ES PARA LAS COLISIONES
+type CheckActivitiesTimesData struct {
+	T_idUsuario int `json:"idUsuario"`
+	N_dia       int `json:"dia"`
+}
+
+type ActivitiesTimesData struct {
+	N_iduser    int     `json:"iduser"`
+	N_idcourse  int     `json:"idcourse"`
+	N_dia       int     `json:"dia"`
+	StartHour   *string `json:"StartHour"`
+	EndHour     *string `json:"EndHour"`
+	FechaInicio *string `json:"FechaInicio"`
+	FechaFinal  *string `json:"FechaFinal"`
+	IsDeleted   *bool   `json:"IsDeleted"`
+}
+
 type OfficialSchedule struct {
 	N_idHorario            int             `json:"N_idHorario"`
 	N_iduser               int             `json:"N_iduser"`
@@ -199,7 +216,8 @@ type NewNotificacion struct {
 type MuteNotification struct {
 	P_idUsuario       int     `json:"idUsuario"`
 	P_correo          *string `json:"correo"`
-	P_antelacionNotis string  `json:"antelacionNotis"`
+	P_antelacionNotis *string `json:"antelacionNotis"`
+	P_telefono        *string `json:"telefono"`
 }
 type NewCorreo struct {
 	T_asunto        string `json:"asunto"`
@@ -214,6 +232,7 @@ type UserData struct {
 	N_semestreActual   *int    `json:"semestreActual"`
 	T_programa         *string `json:"programa"`
 	TM_antelacionNotis *string `json:"antelacionNotis"`
+	N_celular          *string `json:"celular"`
 }
 
 type ImportSchedule struct {
