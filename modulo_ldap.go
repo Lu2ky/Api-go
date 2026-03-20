@@ -87,20 +87,13 @@ func (j JWTManager) Validate(tokenStr string) (*Claims, error) {
 }
 
 func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := ldap.DialURL("ldaps://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
 	if err != nil {
 		return "", nil, err
 	}
 	defer l.Close()
 
 	l.SetTimeout(5 * time.Second)
-
-	err = l.StartTLS(&tls.Config{
-		InsecureSkipVerify: true,
-	})
-	if err != nil {
-		return "", nil, err
-	}
 
 	err = l.Bind(user+"@adhe.local", pass)
 	if err != nil {
@@ -174,16 +167,11 @@ func createUser(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
 func CreateLDAPUser(adminUser, adminPass, username, password string) error {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := ldap.DialURL("ldaps://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
 	if err != nil {
 		return err
 	}
 	defer l.Close()
-
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-	if err != nil {
-		return err
-	}
 
 	err = l.Bind(adminUser+"@adhe.local", adminPass)
 	if err != nil {
@@ -271,16 +259,11 @@ func createAdmin(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Admin creado correctamente"})
 }	
 func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := ldap.DialURL("ldaps://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
 	if err != nil {
 		return err
 	}
 	defer l.Close()
-
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-	if err != nil {
-		return err
-	}
 
 	err = l.Bind(adminUser+"@adhe.local", adminPass)
 	if err != nil {
@@ -367,15 +350,11 @@ func changeusrpasswd(c *gin.Context){
 
 // Last test for today :P -Luky (CI/CD test)
 func ChangeUserPassword(adminUser, adminPass, username, newPassword string) error {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := ldap.DialURL("ldaps://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
 	if err != nil {
 		return err
 	}
 	defer l.Close()
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-	if err != nil {
-		return err
-	}
 	err = l.Bind(adminUser+"@adhe.local", adminPass)
 	if err != nil {
 		return err
