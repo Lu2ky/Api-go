@@ -37,10 +37,9 @@ func main() {
 		especificar en esta sección. Todo debe tener los mismos nombres, en la URL y en el método de la consulta.
 	*/
 	//	Actividades oficiales
-	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
+	//router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
 	router.POST("/GetActivityTimesData", getActivitiesTimesData)
 	router.GET("/GetAcademicPeriods", getAcademicPeriods)
-	router.GET("/GetAcademicPeriod", getAcademicPeriods)
 	//	Comentarios de las actividades oficiales
 	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserId)
 	router.GET("/GetPersonalCourseComments/:id/:idCourse", getPersonalCommentsByUserIdAndCourseId)
