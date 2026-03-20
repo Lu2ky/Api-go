@@ -13,8 +13,8 @@ import (
 var db *sql.DB
 
 func main() {
-	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	err := godotenv.Load() // Load enviorement variables
+	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	//err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
@@ -90,6 +90,9 @@ func main() {
 	router.POST("/addauthuser", createUser)
 	router.POST("/addadmin", createAdmin)
 	router.POST("/changepassword", changeusrpasswd)
+
+	// Token
+	router.POST("/generateToken", generateToken)
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")

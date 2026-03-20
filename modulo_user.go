@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"math/rand/v2"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,5 +60,26 @@ func GetUserInfo(c *gin.Context) {
 	}
 
 	c.JSON(200, userDataArray)
+
+}
+
+func generateToken(c *gin.Context) {
+
+	// crear token
+	codigo := rand.IntN(1000000)
+	token := fmt.Sprintf("%06d", codigo)
+	fmt.Println("Tu token es:", token)
+
+	var tokenNewValue NewToken
+	if err := c.BindJSON(&tokenNewValue); err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	respuesta := NewToken{
+		Token: token,
+	}
+
+	c.JSON(200, respuesta)
 
 }
