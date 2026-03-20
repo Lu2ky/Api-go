@@ -51,6 +51,13 @@ type ActivitiesTimesData struct {
 	IsDeleted   *bool   `json:"IsDeleted"`
 }
 
+type AcademicPeriod struct {
+	N_idPeriodoAcademico int    `json:"idPeriodoAcademico"`
+	T_nombre             string `json:"nombre"`
+	Dt_fechaInicio       string `json:"fechaInicio"`
+	Dt_fechaFinal        string `json:"fechaFinal "`
+}
+
 type OfficialSchedule struct {
 	N_idHorario            int             `json:"N_idHorario"`
 	N_iduser               int             `json:"N_iduser"`

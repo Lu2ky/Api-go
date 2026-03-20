@@ -39,6 +39,7 @@ func main() {
 	//	Actividades oficiales
 	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
 	router.POST("/GetActivityTimesData", getActivitiesTimesData)
+	router.GET("/GetAcademicPeriods", getAcademicPeriods)
 	//	Comentarios de las actividades oficiales
 	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserId)
 	router.GET("/GetPersonalCourseComments/:id/:idCourse", getPersonalCommentsByUserIdAndCourseId)

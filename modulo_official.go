@@ -162,3 +162,65 @@ func getActivitiesTimesData(c *gin.Context) {
 	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
 	c.JSON(200, actTimeArr)
 }
+
+func getAcademicPeriods(c *gin.Context) {
+	//	este ID sale de la URL | /GetOfficialScheduleByUserId/:id
+	//	Param() se encarga de extraer los parámetros definidos en la ruta.
+
+	/*
+		db.Query retorna rows y err
+		rows = *sql.rows | Es un puntero que tiene información de la consulta.
+
+		* Para iterar sobre los resultados se usa rows.Next()
+		* Para leer los valores de cada fila se hace un rows.Scan()
+		* Y para cerrar la consulta se hace un rows.Close(), lo cual es necesario para evitar fugas de recursos que causan
+		errores como que ya no se pueden hacer conexiones.
+
+		Cada vez que se hace el db.Query hay que hacer esos pasos para sacar la info de la consulta.
+
+		El operador := lo que hace es definir una variable e inferir su tipo automáticamente.
+	*/
+	rows, err := db.Query(`SELECT N_idPeriodoAcademico, T_nombre, Dt_fechaInicio, Dt_fechaFinal FROM PeriodoAcademico;`)
+
+	//	si err != nil entonces significa que hay un error.
+	//	nil es similar a null. Entonces si el error es nulo significa que no hay errores.
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	defer rows.Close()
+
+	var ofcschedules []AcademicPeriod
+
+	for rows.Next() {
+		var ofcschedule AcademicPeriod
+		err := rows.Scan(
+			&ofcschedule.N_idPeriodoAcademico,
+			&ofcschedule.T_nombre,
+			&ofcschedule.Dt_fechaInicio,
+			&ofcschedule.Dt_fechaFinal,
+		)
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+
+		//	Y aquí se agrega el objeto ofcschedule al arreglo ofcschedules.
+		ofcschedules = append(ofcschedules, ofcschedule)
+	}
+
+	//	Se verifica si hubo errores mientras se hizo la iteración usando rows.Err().
+	//	Si Next() retorna False, entonces para revisar cuál fue el error se usa rows.Err()
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
+	c.JSON(200, ofcschedules)
+}
