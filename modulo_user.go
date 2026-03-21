@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -59,4 +60,33 @@ func GetUserInfo(c *gin.Context) {
 
 	c.JSON(200, userDataArray)
 
+}
+
+func receiveTokenData(c *gin.Context) {
+	var data NewToken
+
+	// Leer json
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "El formato del JSON es incorrecto o faltan campos",
+		})
+		return
+	}
+
+	// Guardar en Redis
+	err := rdb.Set(ctx, data.UserId, data.Token, 10).Err()
+
+	if err != nil {
+		log.Printf("Error al guardar en Redis: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+
+	// Respuesta exitosa
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Token guardado correctamente en Redis",
+	})
 }

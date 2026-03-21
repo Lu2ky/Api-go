@@ -260,3 +260,8 @@ type ImportSchedule struct {
 	Salon            string `json:"salon"`
 	PeriodoAcademico string `json:"periodoAcademico"`
 }
+
+type NewToken struct {
+	Token  string `json:"token"`
+	UserId string `json:"userId"`
+}

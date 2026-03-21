@@ -5,16 +5,29 @@ import (
 	"log"
 	"os"
 
+	"context"
+
+	"github.com/redis/go-redis/v9"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
 var db *sql.DB
+var ctx = context.Background()
+var rdb *redis.Client
 
+func init() {
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+}
 func main() {
-	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	err := godotenv.Load() // Load enviorement variables
+	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	//err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
@@ -90,6 +103,9 @@ func main() {
 	router.POST("/addauthuser", createUser)
 	router.POST("/addadmin", createAdmin)
 	router.POST("/changepassword", changeusrpasswd)
+
+	// Token
+	router.POST("/receiveTokenData", receiveTokenData)
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
