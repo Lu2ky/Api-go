@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"math/rand/v2"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -63,23 +62,31 @@ func GetUserInfo(c *gin.Context) {
 
 }
 
-func generateToken(c *gin.Context) {
+func receiveTokenData(c *gin.Context) {
+	var data NewToken
 
-	// crear token
-	codigo := rand.IntN(1000000)
-	token := fmt.Sprintf("%06d", codigo)
-	fmt.Println("Tu token es:", token)
-
-	var tokenNewValue NewToken
-	if err := c.BindJSON(&tokenNewValue); err != nil {
-		c.JSON(400, gin.H{"error": "formato invalido de json"})
+	// Leer json
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "El formato del JSON es incorrecto o faltan campos",
+		})
 		return
 	}
 
-	respuesta := NewToken{
-		Token: token,
+	// Guardar en Redis
+	err := rdb.Set(ctx, data.UserId, data.Token, 10).Err()
+
+	if err != nil {
+		log.Printf("Error al guardar en Redis: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
 	}
 
-	c.JSON(200, respuesta)
-
+	// Respuesta exitosa
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Token guardado correctamente en Redis",
+	})
 }
