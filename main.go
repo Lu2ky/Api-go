@@ -26,8 +26,8 @@ func init() {
 	})
 }
 func main() {
-	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	//err := godotenv.Load() // Load enviorement variables
+	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	err := godotenv.Load() // Load enviorement variables
 	if err != nil {
 		log.Fatal(".env file (error corrupted/not found)")
 	}
