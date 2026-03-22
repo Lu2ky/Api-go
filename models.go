@@ -51,6 +51,13 @@ type ActivitiesTimesData struct {
 	IsDeleted   *bool   `json:"IsDeleted"`
 }
 
+type AcademicPeriod struct {
+	N_idPeriodoAcademico int    `json:"idPeriodoAcademico"`
+	T_nombre             string `json:"nombre"`
+	Dt_fechaInicio       string `json:"fechaInicio"`
+	Dt_fechaFinal        string `json:"fechaFinal "`
+}
+
 type OfficialSchedule struct {
 	N_idHorario            int             `json:"N_idHorario"`
 	N_iduser               int             `json:"N_iduser"`
@@ -66,6 +73,8 @@ type OfficialSchedule struct {
 	Credits                sql.NullFloat64 `json:"Credits"`
 	Standardofcalification string          `json:"Standardofcalification"`
 	Campus                 string          `json:"Campus"`
+	N_idPeriodoAcademico   int             `json:"IdPeriodoAcademico"`
+	Periodo_academico      string          `json:"PeriodoAcademico"`
 	FechaInicio            string          `json:"FechaInicio"`
 	FechaFinal             string          `json:"FechaFinal"`
 }
@@ -252,4 +261,13 @@ type ImportSchedule struct {
 	HoraFin          string `json:"horaFin"`
 	Salon            string `json:"salon"`
 	PeriodoAcademico string `json:"periodoAcademico"`
+}
+
+type NewToken struct {
+	UserId string `json:"userId"`
+	Token  string `json:"token"`
+}
+
+type RequestToken struct {
+	UserID string `json:"userId"`
 }

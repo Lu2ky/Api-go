@@ -5,19 +5,40 @@ import (
 	"log"
 	"os"
 
+	"context"
+
+	"github.com/redis/go-redis/v9"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
 var db *sql.DB
+var ctx = context.Background()
+var rdb *redis.Client
 
-func main() {
+func init() {
 	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
 	err := godotenv.Load() // Load enviorement variables
+
 	if err != nil {
-		log.Fatal(".env file (error corrupted/not found)")
+		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
 	}
+
+	// Leer las variables
+	addr := os.Getenv("DB_ADDR_REDIS") + ":" + os.Getenv("DB_ADDR_PORT_REDIS")
+	pass := os.Getenv("DB_PASS_REDIS")
+
+	// Inicializar el cliente
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: pass,
+		DB:       0,
+	})
+}
+
+func main() {
 	cfg := mysql.NewConfig()          //Create the cfg for MySQL
 	cfg.User = os.Getenv("DB_USER")   //User
 	cfg.Passwd = os.Getenv("DB_PASS") //Pass
@@ -32,6 +53,8 @@ func main() {
 	defer db.Close()
 	router := gin.Default()
 	router.Use(apiKeyAuth())
+
+	
 	/*
 		Aqui están los métodos que provee la API, cuando se quiere obtener una consulta nueva de la BD, se tiene que
 		especificar en esta sección. Todo debe tener los mismos nombres, en la URL y en el método de la consulta.
@@ -39,6 +62,7 @@ func main() {
 	//	Actividades oficiales
 	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
 	router.POST("/GetActivityTimesData", getActivitiesTimesData)
+	router.GET("/GetAcademicPeriods", getAcademicPeriods)
 	//	Comentarios de las actividades oficiales
 	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserId)
 	router.GET("/GetPersonalCourseComments/:id/:idCourse", getPersonalCommentsByUserIdAndCourseId)
@@ -90,9 +114,17 @@ func main() {
 	router.POST("/addadmin", createAdmin)
 	router.POST("/changepassword", changeusrpasswd)
 
+	// Token
+	router.POST("/receiveTokenData", receiveTokenData)
+	router.GET("/getToken", getToken)
+
+	// logs
+	router.POST("/addLog", addLog)
+
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
 
+	
 }
 func method(c *gin.Context) {}
 

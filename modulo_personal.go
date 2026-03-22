@@ -122,6 +122,13 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 		return
 	}
 
+	descripcion := "Se actualizó actividad personal ID: " + strconv.Itoa(personalNewValue.P_idCurso)
+
+insertarLog(
+	0, 
+	"UPDATE_ACTIVIDAD_PERSONAL",
+	descripcion,
+
 	c.JSON(200, gin.H{
 		"message": "Actividad actualizada correctamente",
 	})
@@ -169,6 +176,10 @@ func updateNameOfPersonalScheduleByIdCourse(c *gin.Context) {
 		return
 	}
 
+	descripcion := "Se actualizó NOMBRE de actividad ID: " + strconv.Itoa(newValue.IdPersonalSchedule)
+
+	insertarLog(0, "UPDATE_NOMBRE_ACTIVIDAD", descripcion)
+
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
 		"rowsAffected": rowsAffected,
@@ -193,6 +204,10 @@ func updateDescriptionOfPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Personal schedule not found"})
 		return
 	}
+
+	descripcion := "Se actualizó DESCRIPCIÓN de actividad ID: " + strconv.Itoa(newValue.IdPersonalSchedule)
+
+	insertarLog(0, "UPDATE_DESCRIPCION_ACTIVIDAD", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -219,6 +234,10 @@ func updateStartHourOfPersonalScheduleByIdCourse(c *gin.Context) {
 		return
 	}
 
+	descripcion := "Se actualizó HORA INICIO actividad ID: " + strconv.Itoa(newValue.IdPersonalSchedule)
+
+insertarLog(0, "UPDATE_HORA_INICIO", descripcion)
+
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
 		"rowsAffected": rowsAffected,
@@ -243,6 +262,9 @@ func updateEndHourOfPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Personal schedule not found"})
 		return
 	}
+	descripcion := "Se actualizó HORA FIN actividad ID: " + strconv.Itoa(newValue.IdPersonalSchedule)
+
+	insertarLog(0, "UPDATE_HORA_FIN", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -271,6 +293,10 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Personal schedule not found"})
 		return
 	}
+
+	descripcion := "Se eliminó o recuperó actividad ID: " + strconv.Itoa(deleteValue.IdPersonalSchedule)
+
+	insertarLog(0, "DELETE_OR_RECOVERY_ACTIVIDAD", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -394,6 +420,15 @@ func addPersonalActivity(c *gin.Context) {
 			return
 		}
 	*/
+
+
+	descripcion := "Se creó actividad personal: " + personalNewValue.P_nombreCurso
+
+insertarLog(
+	personalNewValue.P_usuario, 
+	"INSERT_ACTIVIDAD_PERSONAL",
+	descripcion,
+)
 	c.JSON(200, gin.H{
 		"message": "Actividad creada correctamente",
 	})

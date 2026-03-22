@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -34,6 +33,24 @@ func auth(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
+
+	var userID int
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		User.User,
+	).Scan(&userID)
+
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
+
+
+	insertarLog(
+		userID,
+		"LOGIN",
+		"El usuario inició sesión",
+	)
 
 	c.JSON(200, gin.H{
 		"Token":    token,
@@ -94,13 +111,6 @@ func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) 
 	defer l.Close()
 
 	l.SetTimeout(5 * time.Second)
-
-	err = l.StartTLS(&tls.Config{
-		InsecureSkipVerify: true,
-	})
-	if err != nil {
-		return "", nil, err
-	}
 
 	err = l.Bind(user+"@adhe.local", pass)
 	if err != nil {
@@ -171,6 +181,12 @@ func createUser(c *gin.Context) {
 		return
 	}
 
+	insertarLog(
+		0, 
+		"CREAR_USUARIO",
+		"Se creó el usuario: "+req.User,
+	)
+
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
 func CreateLDAPUser(adminUser, adminPass, username, password string) error {
@@ -179,11 +195,6 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 		return err
 	}
 	defer l.Close()
-
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-	if err != nil {
-		return err
-	}
 
 	err = l.Bind(adminUser+"@adhe.local", adminPass)
 	if err != nil {
@@ -268,6 +279,13 @@ func createAdmin(c *gin.Context) {
 		return
 	}
 
+	insertarLog(
+		0,
+		"CREAR_ADMIN",
+		"Se creó un administrador: "+req.User,
+	)
+
+
 	c.JSON(200, gin.H{"message": "Admin creado correctamente"})
 }	
 func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error {
@@ -276,11 +294,6 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 		return err
 	}
 	defer l.Close()
-
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-	if err != nil {
-		return err
-	}
 
 	err = l.Bind(adminUser+"@adhe.local", adminPass)
 	if err != nil {
@@ -362,6 +375,24 @@ func changeusrpasswd(c *gin.Context){
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+
+	var userID int
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		req.User,
+	).Scan(&userID)
+
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
+
+
+	insertarLog(
+		userID,
+		"CAMBIAR_CONTRASEÑA",
+		"El usuario cambió su contraseña",
+	)
 	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})	
 }
 
@@ -372,10 +403,6 @@ func ChangeUserPassword(adminUser, adminPass, username, newPassword string) erro
 		return err
 	}
 	defer l.Close()
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-	if err != nil {
-		return err
-	}
 	err = l.Bind(adminUser+"@adhe.local", adminPass)
 	if err != nil {
 		return err

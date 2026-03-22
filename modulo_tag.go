@@ -134,6 +134,11 @@ func deleteTag(c *gin.Context) {
 		return
 	}
 
+	descripcion := "Se eliminó/recuperó etiqueta ID: " + strconv.Itoa(delTag.N_idEtiqueta)
+
+	insertarLog(delTag.N_idEtiqueta, "DELETE_ETIQUETA", descripcion)
+
+
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Etiqueta alterada correctamente",
