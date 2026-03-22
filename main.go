@@ -28,22 +28,17 @@ func init() {
 
 	// Leer las variables
 	addr := os.Getenv("DB_ADDR_REDIS") + ":" + os.Getenv("DB_ADDR_PORT_REDIS")
-	pass := os.Getenv("REDIS_PASSWORD")
-	db := 0
+	pass := os.Getenv("DB_PASS_REDIS")
 
 	// Inicializar el cliente
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: pass,
-		DB:       db,
+		DB:       0,
 	})
 }
+
 func main() {
-	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	//err := godotenv.Load() // Load enviorement variables
-	if err != nil {
-		log.Fatal(".env file (error corrupted/not found)")
-	}
 	cfg := mysql.NewConfig()          //Create the cfg for MySQL
 	cfg.User = os.Getenv("DB_USER")   //User
 	cfg.Passwd = os.Getenv("DB_PASS") //Pass
