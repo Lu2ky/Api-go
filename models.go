@@ -73,6 +73,8 @@ type OfficialSchedule struct {
 	Credits                sql.NullFloat64 `json:"Credits"`
 	Standardofcalification string          `json:"Standardofcalification"`
 	Campus                 string          `json:"Campus"`
+	N_idPeriodoAcademico   int             `json:"IdPeriodoAcademico"`
+	Periodo_academico      string          `json:"PeriodoAcademico"`
 	FechaInicio            string          `json:"FechaInicio"`
 	FechaFinal             string          `json:"FechaFinal"`
 }
