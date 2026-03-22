@@ -103,13 +103,13 @@ func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) 
 
 	l.SetTimeout(5 * time.Second)
 
-	err = l.Bind(user+"@adhe.local", pass)
+	err = l.Bind(user+"@upbplanner.local", pass)
 	if err != nil {
 		return "", nil, err
 	}
 
 	searchRequest := ldap.NewSearchRequest(
-		"DC=adhe,DC=local",
+		"DC=upbplanner,DC=local",
 		ldap.ScopeWholeSubtree,
 		ldap.NeverDerefAliases,
 		0,
@@ -183,12 +183,12 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 	}
 	defer l.Close()
 
-	err = l.Bind(adminUser+"@adhe.local", adminPass)
+	err = l.Bind(adminUser+"@upbplanner.local", adminPass)
 	if err != nil {
 		return err
 	}
 
-	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=adhe,DC=local", username)
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
 
 	addReq := ldap.NewAddRequest(userDN, nil)
 
@@ -201,7 +201,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 
 	addReq.Attribute("cn", []string{username})
 	addReq.Attribute("sAMAccountName", []string{username})
-	addReq.Attribute("userPrincipalName", []string{username + "@adhe.local"})
+	addReq.Attribute("userPrincipalName", []string{username + "@upbplanner.local"})
 	addReq.Attribute("displayName", []string{username})
 	addReq.Attribute("userAccountControl", []string{"544"})
 
@@ -234,7 +234,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN := "CN=Usuario,CN=Users,DC=adhe,DC=local"
+	groupDN := "CN=Usuario,CN=Users,DC=upbplanner,DC=local"
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
@@ -277,12 +277,12 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 	}
 	defer l.Close()
 
-	err = l.Bind(adminUser+"@adhe.local", adminPass)
+	err = l.Bind(adminUser+"@upbplanner.local", adminPass)
 	if err != nil {
 		return err
 	}
 
-	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=adhe,DC=local", username)
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
 
 	addReq := ldap.NewAddRequest(userDN, nil)
 
@@ -295,7 +295,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 
 	addReq.Attribute("cn", []string{username})
 	addReq.Attribute("sAMAccountName", []string{username})
-	addReq.Attribute("userPrincipalName", []string{username + "@adhe.local"})
+	addReq.Attribute("userPrincipalName", []string{username + "@upbplanner.local"})
 	addReq.Attribute("displayName", []string{username})
 	addReq.Attribute("userAccountControl", []string{"544"})
 
@@ -328,7 +328,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN := fmt.Sprintf("CN=%s,CN=admin_upb_planner,DC=adhe,DC=local", username)
+	groupDN := fmt.Sprintf("CN=%s,CN=admin_upb_planner,DC=upbplanner,DC=local", username)
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
@@ -368,12 +368,12 @@ func ChangeUserPassword(adminUser, adminPass, username, newPassword string) erro
 	}
 	defer l.Close()
 
-	err = l.Bind(adminUser+"@adhe.local", adminPass)
+	err = l.Bind(adminUser+"@upbplanner.local", adminPass)
 	if err != nil {
 		return err
 	}
 
-	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=adhe,DC=local", username)
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
 	quotedPwd := fmt.Sprintf("\"%s\"", newPassword)
 	utf16Pwd := utf16.Encode([]rune(quotedPwd))
 	pwdBytes := make([]byte, len(utf16Pwd)*2)
