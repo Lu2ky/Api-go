@@ -62,6 +62,7 @@ func GetUserInfo(c *gin.Context) {
 
 }
 
+// Guardar datos del token en la base de datos
 func receiveTokenData(c *gin.Context) {
 	var data NewToken
 
@@ -89,4 +90,25 @@ func receiveTokenData(c *gin.Context) {
 		"status":  "success",
 		"message": "Token guardado correctamente en Redis",
 	})
+}
+
+// Obtener token de la base de datos
+func getToken(c *gin.Context) {
+	var req RequestToken
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Datos inválidos"})
+		return
+	}
+
+	// Hacer la consulta
+	val, err := rdb.Get(c.Request.Context(), req.UserID).Result()
+
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Token no encontrado"})
+		return
+	}
+
+	// Devolver el token
+	c.JSON(200, gin.H{"token": val})
 }

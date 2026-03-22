@@ -19,18 +19,26 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
+	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	err := godotenv.Load() // Load enviorement variables
+
+	if err != nil {
+		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
+	}
+
+	// Leer las variables
+	addr := os.Getenv("DB_ADDR_REDIS") + ":" + os.Getenv("DB_ADDR_PORT_REDIS")
+	pass := os.Getenv("DB_PASS_REDIS")
+
+	// Inicializar el cliente
 	rdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
+		Addr:     addr,
+		Password: pass,
 		DB:       0,
 	})
 }
+
 func main() {
-	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	err := godotenv.Load() // Load enviorement variables
-	if err != nil {
-		log.Fatal(".env file (error corrupted/not found)")
-	}
 	cfg := mysql.NewConfig()          //Create the cfg for MySQL
 	cfg.User = os.Getenv("DB_USER")   //User
 	cfg.Passwd = os.Getenv("DB_PASS") //Pass
@@ -106,6 +114,7 @@ func main() {
 
 	// Token
 	router.POST("/receiveTokenData", receiveTokenData)
+	router.GET("/getToken", getToken)
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
