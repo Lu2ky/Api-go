@@ -73,6 +73,8 @@ type OfficialSchedule struct {
 	Credits                sql.NullFloat64 `json:"Credits"`
 	Standardofcalification string          `json:"Standardofcalification"`
 	Campus                 string          `json:"Campus"`
+	N_idPeriodoAcademico   int             `json:"IdPeriodoAcademico"`
+	Periodo_academico      string          `json:"PeriodoAcademico"`
 	FechaInicio            string          `json:"FechaInicio"`
 	FechaFinal             string          `json:"FechaFinal"`
 }
@@ -259,4 +261,13 @@ type ImportSchedule struct {
 	HoraFin          string `json:"horaFin"`
 	Salon            string `json:"salon"`
 	PeriodoAcademico string `json:"periodoAcademico"`
+}
+
+type NewToken struct {
+	UserId string `json:"userId"`
+	Token  string `json:"token"`
+}
+
+type RequestToken struct {
+	UserID string `json:"userId"`
 }

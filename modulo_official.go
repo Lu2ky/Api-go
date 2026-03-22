@@ -69,7 +69,7 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 			&ofcschedule.Nrc,
 			&ofcschedule.Course,
 			&ofcschedule.Tag,
-			&ofcschedule.Teacher, //falta
+			&ofcschedule.Teacher,
 			&ofcschedule.Day,
 			&ofcschedule.StartHour,
 			&ofcschedule.EndHour,
@@ -77,6 +77,8 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 			&ofcschedule.Credits,
 			&ofcschedule.Standardofcalification,
 			&ofcschedule.Campus,
+			&ofcschedule.N_idPeriodoAcademico,
+			&ofcschedule.Periodo_academico,
 			&ofcschedule.FechaInicio,
 			&ofcschedule.FechaFinal,
 		)
