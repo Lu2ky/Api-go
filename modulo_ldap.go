@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -85,8 +86,16 @@ func (j JWTManager) Validate(tokenStr string) (*Claims, error) {
 	return claims, nil
 }
 
+func dialLDAPS() (*ldap.Conn, error) {
+	return ldap.DialURL("ldaps://"+os.Getenv("LDAP_ADDR")+":636",
+		ldap.DialWithTLSConfig(&tls.Config{
+			InsecureSkipVerify: true,
+		}),
+	)
+}
+
 func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := dialLDAPS()
 	if err != nil {
 		return "", nil, err
 	}
@@ -143,6 +152,7 @@ func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) 
 
 	return token, u, nil
 }
+
 func createUser(c *gin.Context) {
 	var req UserAuth
 
@@ -165,8 +175,9 @@ func createUser(c *gin.Context) {
 
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
+
 func CreateLDAPUser(adminUser, adminPass, username, password string) error {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := dialLDAPS()
 	if err != nil {
 		return err
 	}
@@ -214,6 +225,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 	if err != nil {
 		return fmt.Errorf("error seteando password: %v", err)
 	}
+
 	modEnable := ldap.NewModifyRequest(userDN, nil)
 	modEnable.Replace("userAccountControl", []string{"512"})
 
@@ -247,7 +259,7 @@ func createAdmin(c *gin.Context) {
 		os.Getenv("ADMIN_LDAP_ADMIN"),
 		os.Getenv("ADMIN_LDAP_PASS"),
 		req.User,
-		req.Pass,		
+		req.Pass,
 	)
 
 	if err != nil {
@@ -256,9 +268,10 @@ func createAdmin(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "Admin creado correctamente"})
-}	
+}
+
 func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := dialLDAPS()
 	if err != nil {
 		return err
 	}
@@ -306,6 +319,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 	if err != nil {
 		return fmt.Errorf("error seteando password: %v", err)
 	}
+
 	modEnable := ldap.NewModifyRequest(userDN, nil)
 	modEnable.Replace("userAccountControl", []string{"512"})
 
@@ -327,9 +341,9 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 	return nil
 }
 
-func changeusrpasswd(c *gin.Context){
+func changeusrpasswd(c *gin.Context) {
 	var req UserAuth
-	
+
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "JSON inválido"})
 		return
@@ -344,20 +358,21 @@ func changeusrpasswd(c *gin.Context){
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})	
+	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})
 }
 
-// Last test for today :P -Luky (CI/CD test)
 func ChangeUserPassword(adminUser, adminPass, username, newPassword string) error {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := dialLDAPS()
 	if err != nil {
 		return err
 	}
 	defer l.Close()
+
 	err = l.Bind(adminUser+"@adhe.local", adminPass)
 	if err != nil {
 		return err
 	}
+
 	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=adhe,DC=local", username)
 	quotedPwd := fmt.Sprintf("\"%s\"", newPassword)
 	utf16Pwd := utf16.Encode([]rune(quotedPwd))
@@ -365,8 +380,10 @@ func ChangeUserPassword(adminUser, adminPass, username, newPassword string) erro
 	for i, v := range utf16Pwd {
 		binary.LittleEndian.PutUint16(pwdBytes[i*2:], v)
 	}
+
 	modPwd := ldap.NewModifyRequest(userDN, nil)
 	modPwd.Replace("unicodePwd", []string{string(pwdBytes)})
+
 	err = l.Modify(modPwd)
 	if err != nil {
 		return fmt.Errorf("error cambiando password: %v", err)
