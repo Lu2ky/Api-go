@@ -1,13 +1,7 @@
 package main
 
 import (
-	"database/sql"
-	"log"
-	"os"
-
 	"github.com/gin-gonic/gin"
-	"github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
 
 
