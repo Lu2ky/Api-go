@@ -218,6 +218,12 @@ func addReminder(c *gin.Context) {
 
 	log.Printf("ID del ToDo creado: %d", newID)
 
+	descripcion := "Se creó recordatorio ID: " + strconv.FormatInt(newID, 10) +
+		" | Usuario: " + strconv.Itoa(reminderNewValue.P_usuario) +
+		" | Nombre: " + reminderNewValue.P_nombre
+
+	insertarLog(reminderNewValue.P_usuario, "CREAR_RECORDATORIO", descripcion)
+
 	c.JSON(200, gin.H{
 		"message":    "Recordatorio creado correctamente",
 		"InsertedId": newID,
@@ -279,6 +285,12 @@ func updateReminderById(c *gin.Context) {
 		return
 	}
 
+	descripcion := "Se actualizó recordatorio ID: " + strconv.Itoa(reminderNewValue.P_idToDo)
+
+	insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+
+
+
 	c.JSON(200, gin.H{
 		"message": "Recordatorio creado correctamente",
 	})
@@ -302,6 +314,10 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
+
+	descripcion := "Se eliminó/recuperó recordatorio ID: " + strconv.Itoa(delReminder.N_idRecordatorio)
+
+	insertarLog(delReminder.N_idRecordatorio, "DELETE_RECORDATORIO", descripcion)
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
