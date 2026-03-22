@@ -62,6 +62,7 @@ func GetUserInfo(c *gin.Context) {
 
 }
 
+// Guardar datos del token en la base de datos
 func receiveTokenData(c *gin.Context) {
 	var data NewToken
 
@@ -90,3 +91,5 @@ func receiveTokenData(c *gin.Context) {
 		"message": "Token guardado correctamente en Redis",
 	})
 }
+
+// Obtener token de la base de datos

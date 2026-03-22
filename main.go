@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"strconv"
 
 	"context"
 
@@ -19,10 +20,29 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
+	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	//err := godotenv.Load() // Load enviorement variables
+
+	if err != nil {
+		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
+	}
+
+	// Leer las variables
+	addr := os.Getenv("DB_ADDR_REDIS") + ":" + os.Getenv("DB_ADDR_PORT_REDIS")
+	pass := os.Getenv("REDIS_PASSWORD")
+	dbStr := os.Getenv("REDIS_DB")
+
+	// Convertir el DB string a int (Redis pide un int)
+	db, err := strconv.Atoi(dbStr)
+	if err != nil {
+		db = 0 // Valor por defecto si falla la conversión
+	}
+
+	// 3. Inicializar el cliente
 	rdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+		Addr:     addr,
+		Password: pass,
+		DB:       db,
 	})
 }
 func main() {
@@ -106,6 +126,7 @@ func main() {
 
 	// Token
 	router.POST("/receiveTokenData", receiveTokenData)
+	router.GET("/getToken", getToken)
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
