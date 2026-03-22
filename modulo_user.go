@@ -93,3 +93,22 @@ func receiveTokenData(c *gin.Context) {
 }
 
 // Obtener token de la base de datos
+func getToken(c *gin.Context) {
+	var req RequestToken
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Datos inválidos"})
+		return
+	}
+
+	// Hacer la consulta
+	val, err := rdb.Get(c.Request.Context(), req.UserID).Result()
+
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Token no encontrado"})
+		return
+	}
+
+	// Devolver el token
+	c.JSON(200, gin.H{"token": val})
+}

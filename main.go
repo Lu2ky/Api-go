@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 	"os"
-	"strconv"
 
 	"context"
 
@@ -30,15 +29,9 @@ func init() {
 	// Leer las variables
 	addr := os.Getenv("DB_ADDR_REDIS") + ":" + os.Getenv("DB_ADDR_PORT_REDIS")
 	pass := os.Getenv("REDIS_PASSWORD")
-	dbStr := os.Getenv("REDIS_DB")
+	db := 0
 
-	// Convertir el DB string a int (Redis pide un int)
-	db, err := strconv.Atoi(dbStr)
-	if err != nil {
-		db = 0 // Valor por defecto si falla la conversión
-	}
-
-	// 3. Inicializar el cliente
+	// Inicializar el cliente
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: pass,
