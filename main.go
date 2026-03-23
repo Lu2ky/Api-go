@@ -53,6 +53,8 @@ func main() {
 	defer db.Close()
 	router := gin.Default()
 	router.Use(apiKeyAuth())
+
+	
 	/*
 		Aqui están los métodos que provee la API, cuando se quiere obtener una consulta nueva de la BD, se tiene que
 		especificar en esta sección. Todo debe tener los mismos nombres, en la URL y en el método de la consulta.
@@ -119,6 +121,8 @@ func main() {
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
 
+	// logs
+	router.POST("/addLog", addLog)
 }
 func method(c *gin.Context) {}
 
