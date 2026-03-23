@@ -77,7 +77,7 @@ func receiveTokenData(c *gin.Context) {
 	}
 
 	// Guardar en Redis
-	err := rdb.Set(ctx, "reset:"+data.UserId, data.Token, 15*time.Minute).Err()
+	err := rdb.Set(ctx, "reset:"+data.Token, data.UserId, 15*time.Minute).Err()
 
 	if err != nil {
 		log.Printf("Error al guardar en Redis: %v", err)
