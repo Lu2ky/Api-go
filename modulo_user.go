@@ -112,5 +112,5 @@ func getToken(c *gin.Context) {
 	}
 
 	// Devolver el token
-	c.JSON(200, gin.H{"token": val})
+	c.JSON(200, gin.H{"userId": val})
 }
