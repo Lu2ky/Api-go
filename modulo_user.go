@@ -104,7 +104,7 @@ func getToken(c *gin.Context) {
 	}
 
 	// Hacer la consulta
-	val, err := rdb.Get(c.Request.Context(), req.UserID).Result()
+	val, err := rdb.Get(c.Request.Context(), req.Token).Result()
 
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Token no encontrado"})

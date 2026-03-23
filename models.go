@@ -269,5 +269,5 @@ type NewToken struct {
 }
 
 type RequestToken struct {
-	UserID string `json:"userId"`
+	Token string `json:"token"`
 }
