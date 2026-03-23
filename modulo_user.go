@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -75,7 +77,7 @@ func receiveTokenData(c *gin.Context) {
 	}
 
 	// Guardar en Redis
-	err := rdb.Set(ctx, data.UserId, data.Token, 10).Err()
+	err := rdb.Set(ctx, "reset:"+data.UserId, data.Token, 15*time.Minute).Err()
 
 	if err != nil {
 		log.Printf("Error al guardar en Redis: %v", err)
