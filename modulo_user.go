@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -97,20 +98,17 @@ func receiveTokenData(c *gin.Context) {
 // Obtener token de la base de datos
 func getToken(c *gin.Context) {
 	var req RequestToken
-
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": "Datos inválidos"})
+		c.JSON(400, gin.H{"error": "JSON mal formado"})
 		return
 	}
 
-	// Hacer la consulta
 	val, err := rdb.Get(c.Request.Context(), req.Token).Result()
-
 	if err != nil {
+		fmt.Printf("Error de Redis: %v\n", err)
 		c.JSON(404, gin.H{"error": "Token no encontrado"})
 		return
 	}
 
-	// Devolver el token
 	c.JSON(200, gin.H{"userId": val})
 }

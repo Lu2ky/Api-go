@@ -19,8 +19,8 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
-	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	err := godotenv.Load() // Load enviorement variables
+	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	//err := godotenv.Load() // Load enviorement variables
 
 	if err != nil {
 		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
@@ -54,7 +54,6 @@ func main() {
 	router := gin.Default()
 	router.Use(apiKeyAuth())
 
-	
 	/*
 		Aqui están los métodos que provee la API, cuando se quiere obtener una consulta nueva de la BD, se tiene que
 		especificar en esta sección. Todo debe tener los mismos nombres, en la URL y en el método de la consulta.
@@ -116,8 +115,7 @@ func main() {
 
 	// Token
 	router.POST("/receiveTokenData", receiveTokenData)
-	router.GET("/getToken", getToken)
-	router.GET("/validateToken", validateToken)
+	router.POST("/getToken", getToken)
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
