@@ -87,7 +87,7 @@ func importSchedule(c *gin.Context) {
 	if err != nil {
 		log.Println("Error obteniendo usuario para log:", err)
 		userID = 0
-
+	}
 	insertarLog(userID, "IMPORTAR_HORARIO", descripcion)
 	c.JSON(200, gin.H{
 		"message": "Horario importado correctamente",
