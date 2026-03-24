@@ -116,8 +116,6 @@ func main() {
 	// Token
 	router.POST("/receiveTokenData", receiveTokenData)
 	router.POST("/getToken", getToken)
-	// Logs
-	router.POST("/addLog", addLog)
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
