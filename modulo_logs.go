@@ -1,7 +1,6 @@
 package main
 import (
 	"log"
-	"github.com/go-sql-driver/mysql"
 )
 
 
