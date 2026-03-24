@@ -90,7 +90,7 @@ func addNotificacion(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Reminder not found"})
 		return
 	}
-	insertedID, _ := result.LastInsertId()
+	//insertedID, _ := result.LastInsertId()
 
 	//descripcion := "Se creó una notificación con id: " + strconv.FormatInt(insertedID, 10)
 
