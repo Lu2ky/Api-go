@@ -78,7 +78,7 @@ func receiveTokenData(c *gin.Context) {
 	}
 
 	// Guardar en Redis
-	err := rdb.Set(ctx, "reset:"+data.Token, data.UserId, 15*time.Minute).Err()
+	err := rdb.Set(ctx, "reset:"+data.CodUsuario, data.Token, 15*time.Minute).Err()
 
 	if err != nil {
 		log.Printf("Error al guardar en Redis: %v", err)
@@ -87,7 +87,7 @@ func receiveTokenData(c *gin.Context) {
 		})
 		return
 	}
-	descripcion := "Se guardó token en Redis para usuario: " + data.UserId
+	descripcion := "Se guardó token en Redis para usuario: " + data.CodUsuario
 	insertarLog(0, "GUARDAR_TOKEN", descripcion) 
 
 	// Respuesta exitosa
@@ -112,5 +112,5 @@ func getToken(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"Token": val})
+	c.JSON(200, gin.H{"token": val})
 }
