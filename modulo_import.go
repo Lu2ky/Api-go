@@ -78,7 +78,6 @@ func importSchedule(c *gin.Context) {
 		" | NRC: " + newScheduleValue.Nrc
 
 	var userID int
-  	var userID int
 	err = db.QueryRow(
 		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
 		newScheduleValue.CodUSuario,
