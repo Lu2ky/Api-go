@@ -116,7 +116,7 @@ func muteNotification(c *gin.Context) {
 	}
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("CALL configuracion_notificaciones(?, ?, ?, ?);",
+	result, err := db.Exec("CALL configuracion_notificaciones(?, ?, ?);",
 		notiNewValue.P_idUsuario,
 		notiNewValue.P_correo,
 		notiNewValue.P_antelacionNotis,
