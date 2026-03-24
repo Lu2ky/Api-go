@@ -120,7 +120,6 @@ func muteNotification(c *gin.Context) {
 		notiNewValue.P_idUsuario,
 		notiNewValue.P_correo,
 		notiNewValue.P_antelacionNotis,
-		notiNewValue.P_telefono,
 	)
 
 	if err != nil {
