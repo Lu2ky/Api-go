@@ -108,7 +108,7 @@ func addPersonalComment(c *gin.Context) {
 	insertedID, _ := result.LastInsertId()
 	
 
-	descripcion := "El id del comentario ingresado fue: " + strconv.FormatInt(insertedID, 10)
+	// descripcion := "El id del comentario ingresado fue: " + strconv.FormatInt(insertedID, 10)
 
 	// insertarLog(
 	//	newComment.N_idUsuario, 
