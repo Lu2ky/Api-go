@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"strconv"
 	"github.com/gin-gonic/gin"
 )
 
@@ -105,7 +104,7 @@ func addPersonalComment(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	insertedID, _ := result.LastInsertId()
+	//insertedID, _ := result.LastInsertId()
 	
 
 	// descripcion := "El id del comentario ingresado fue: " + strconv.FormatInt(insertedID, 10)
