@@ -105,12 +105,12 @@ func getToken(c *gin.Context) {
 		return
 	}
 
-	val, err := rdb.Get(c.Request.Context(), req.Token).Result()
+	val, err := rdb.Get(c.Request.Context(), req.CodUsuario).Result()
 	if err != nil {
 		fmt.Printf("Error de Redis: %v\n", err)
 		c.JSON(404, gin.H{"error": "Token no encontrado"})
 		return
 	}
 
-	c.JSON(200, gin.H{"userId": val})
+	c.JSON(200, gin.H{"Token": val})
 }
