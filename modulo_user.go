@@ -100,6 +100,11 @@ func receiveTokenData(c *gin.Context) {
 // Obtener token de la base de datos
 func getToken(c *gin.Context) {
 	var req Token
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON mal formado"})
+		return
+	}
+
 	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
 
 	if err != nil {
@@ -113,8 +118,5 @@ func getToken(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"message": "Token validado correctamente",
-		"userId":  req.UserId,
-	})
+	c.JSON(200, gin.H{"userId": req.UserId})
 }
