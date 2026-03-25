@@ -54,47 +54,47 @@ func main() {
 	router := gin.Default()
 	router.Use(apiKeyAuth())
 
-	/*
-		Aqui están los métodos que provee la API, cuando se quiere obtener una consulta nueva de la BD, se tiene que
-		especificar en esta sección. Todo debe tener los mismos nombres, en la URL y en el método de la consulta.
-	*/
-	//	Actividades oficiales
+	registerLegacyRoutes(router)
+	v1 := router.Group("/api/v1")
+	registerV1Routes(v1)
+
+	router.Run("0.0.0.0:8080") // The port number for expone the API
+	//router.Run(":8080")
+}
+
+func registerLegacyRoutes(router gin.IRoutes) {
+	// Actividades oficiales
 	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
 	router.POST("/GetActivityTimesData", getActivitiesTimesData)
 	router.GET("/GetAcademicPeriods", getAcademicPeriods)
-	//	Comentarios de las actividades oficiales
+
+	// Comentarios
 	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserId)
 	router.GET("/GetPersonalCourseComments/:id/:idCourse", getPersonalCommentsByUserIdAndCourseId)
 	router.POST("/addPersonalComment", addPersonalComment)
 	router.POST("/updatePersonalComment", updatePersonalComment)
 	router.POST("/deletePersonalComment", deletePersonalComment)
 
-	//	Actividades personales
+	// Actividades personales
 	router.GET("/GetPersonalScheduleByUserId/:id", getPersonalScheduleByUserId)
 	router.POST("/addPersonalActivity", addPersonalActivity)
 	router.POST("/updatePersonalScheduleByIdCourse", updatePersonalScheduleByIdCourse)
-
-	//	router.POST("/updateNameOfPersonalScheduleByIdCourse", updateNameOfPersonalScheduleByIdCourse)
-	//	router.POST("/updateDescriptionOfPersonalScheduleByIdCourse", updateDescriptionOfPersonalScheduleByIdCourse)
-	//	router.POST("/updateStartHourOfPersonalScheduleByIdCourse", updateStartHourOfPersonalScheduleByIdCourse)
-	//	router.POST("/updateEndHourOfPersonalScheduleByIdCourse", updateEndHourOfPersonalScheduleByIdCourse)
-
 	router.POST("/deleteOrRecoveryPersonalScheduleByIdCourse", deleteOrRecoveryPersonalScheduleByIdCourse)
-
 	router.GET("/GetTiposCurso", GetTiposCurso)
-	//	Etiquetas
+
+	// Etiquetas
 	router.GET("/GetTagsByUserId/:id", GetTagsByUserId)
 	router.GET("/GetTagsByUserIdAndReminderId/:id/:reminderId", GetTagsByUserIdAndReminderId)
 	router.POST("/deleteTag", deleteTag)
 
-	//	Recordatorios
+	// Recordatorios
 	router.GET("/GetReminders/:id", GetRemindersByUserId)
 	router.GET("/GetRemindersTags/:id", GetRemindersTagsByUserId)
 	router.POST("/addReminder", addReminder)
 	router.POST("/updateReminder", updateReminderById)
 	router.POST("/deleteOrRecoverReminder", deleteOrRecoverReminder)
 
-	//	Notificaciones y correos
+	// Notificaciones y correos
 	router.GET("/GetNotifications/:id", GetNotificaciones)
 	router.POST("/addNotification", addNotificacion)
 	router.POST("/muteNotification", muteNotification)
@@ -103,11 +103,10 @@ func main() {
 	// Importar horario
 	router.POST("/importSchedule", importSchedule)
 
-	//	Configuracion de usuario
+	// Configuración de usuario
 	router.GET("/GetUserInfo/:id", GetUserInfo)
-	//router.GET("/GetUserInfo/:id", GetUserInfo)
 
-	//	LDAP
+	// LDAP
 	router.POST("/auth", auth)
 	router.POST("/addauthuser", createUser)
 	router.POST("/addadmin", createAdmin)
@@ -116,10 +115,63 @@ func main() {
 	// Token
 	router.POST("/receiveTokenData", receiveTokenData)
 	router.POST("/getToken", getToken)
-
-	router.Run("0.0.0.0:8080") // The port number for expone the API
-	//router.Run(":8080")
 }
+
+func registerV1Routes(router gin.IRoutes) {
+	// Official schedules
+	router.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
+	router.POST("/schedules/activities/times", getActivitiesTimesData)
+	router.GET("/academic-periods", getAcademicPeriods)
+
+	// Personal comments
+	router.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
+	router.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
+	router.POST("/comments/personal", addPersonalComment)
+	router.POST("/comments/personal/update", updatePersonalComment)
+	router.POST("/comments/personal/delete", deletePersonalComment)
+
+	// Personal schedules
+	router.GET("/schedules/personal/users/:id", getPersonalScheduleByUserId)
+	router.POST("/schedules/personal", addPersonalActivity)
+	router.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
+	router.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
+	router.GET("/course-types", GetTiposCurso)
+
+	// Tags
+	router.GET("/tags/users/:id", GetTagsByUserId)
+	router.GET("/tags/users/:id/reminders/:reminderId", GetTagsByUserIdAndReminderId)
+	router.POST("/tags/delete", deleteTag)
+
+	// Reminders
+	router.GET("/reminders/users/:id", GetRemindersByUserId)
+	router.GET("/reminders/users/:id/tags", GetRemindersTagsByUserId)
+	router.POST("/reminders", addReminder)
+	router.POST("/reminders/update", updateReminderById)
+	router.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
+
+	// Notifications and emails
+	router.GET("/notifications/users/:id", GetNotificaciones)
+	router.POST("/notifications", addNotificacion)
+	router.POST("/notifications/mute", muteNotification)
+	router.POST("/emails", addCorreo)
+
+	// Schedule import
+	router.POST("/schedules/import", importSchedule)
+
+	// User configuration
+	router.GET("/users/:id", GetUserInfo)
+
+	// LDAP/auth
+	router.POST("/auth/login", auth)
+	router.POST("/auth/users", createUser)
+	router.POST("/auth/admins", createAdmin)
+	router.POST("/auth/change-password", changeusrpasswd)
+
+	// Tokens
+	router.POST("/tokens", receiveTokenData)
+	router.POST("/tokens/get", getToken)
+}
+
 func method(c *gin.Context) {}
 
 // c *gin.Context essential for method in GET/POST actions
