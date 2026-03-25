@@ -204,7 +204,7 @@ type DelReminder struct {
 	N_idRecordatorio int `json:"N_idRecordatorio"`
 	P_usuario        int `json:"P_usuario"`
 }
-}
+
 type TipoCurso struct {
 	N_idTipoCurso int    `json:"N_idTipoCurso"`
 	T_nombre      string `json:"T_nombre"`
