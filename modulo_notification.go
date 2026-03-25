@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -90,7 +89,15 @@ func addNotificacion(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Reminder not found"})
 		return
 	}
+	//insertedID, _ := result.LastInsertId()
 
+	//descripcion := "Se creó una notificación con id: " + strconv.FormatInt(insertedID, 10)
+
+	// insertarLog(
+	//	notiNewValue.N_idUsuario, 
+	//	"CREAR_NOTIFICACION",
+	//	descripcion,
+	// )
 	c.JSON(200, gin.H{
 		"message": "Notificacion creada correctamente",
 	})
@@ -109,11 +116,10 @@ func muteNotification(c *gin.Context) {
 	}
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("CALL configuracion_notificaciones(?, ?, ?, ?);",
+	result, err := db.Exec("CALL configuracion_notificaciones(?, ?, ?);",
 		notiNewValue.P_idUsuario,
 		notiNewValue.P_correo,
 		notiNewValue.P_antelacionNotis,
-		notiNewValue.P_telefono,
 	)
 
 	if err != nil {
@@ -123,7 +129,11 @@ func muteNotification(c *gin.Context) {
 	}
 
 	rowsAffected, _ := result.RowsAffected()
-
+	insertarLog(
+		notiNewValue.P_idUsuario,
+		"CONFIGURAR_NOTIFICACIONES",
+		"El usuario modificó configuración de notificaciones",
+	)
 	if rowsAffected == 0 {
 		c.JSON(200, gin.H{"message": "No hubo cambios"})
 		return
@@ -166,6 +176,13 @@ func addCorreo(c *gin.Context) {
 		return
 	}
 
+	//insertedID, _ := result.LastInsertId()
+	//descripcion := "Se creó un correo con id: " + strconv.FormatInt(insertedID, 10)
+	//insertarLog(
+	//	correoNewValue.N_idUsuario,
+	//	"CREAR_CORREO",
+	//	descripcion,
+	//)
 	c.JSON(200, gin.H{
 		"message": "Correo creado correctamente",
 	})

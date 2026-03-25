@@ -64,7 +64,6 @@ func importSchedule(c *gin.Context) {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
-
 	}
 
 	rowsAffected, _ := result.RowsAffected()
@@ -74,7 +73,21 @@ func importSchedule(c *gin.Context) {
 		return
 
 	}
+	descripcion := "Se importó horario del usuario: " + newScheduleValue.CodUSuario +
+		" | Curso: " + newScheduleValue.NombreCurso +
+		" | NRC: " + newScheduleValue.Nrc
 
+	var userID int
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		newScheduleValue.CodUSuario,
+	).Scan(&userID)
+
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
+	insertarLog(userID, "IMPORTAR_HORARIO", descripcion)
 	c.JSON(200, gin.H{
 		"message": "Horario importado correctamente",
 	})

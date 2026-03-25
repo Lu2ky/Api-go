@@ -78,7 +78,7 @@ func receiveTokenData(c *gin.Context) {
 	}
 
 	// Guardar en Redis
-	err := rdb.Set(ctx, "reset:"+data.Token, data.UserId, 15*time.Minute).Err()
+	err := rdb.Set(ctx, "reset:"+data.CodUsuario, data.Token, 15*time.Minute).Err()
 
 	if err != nil {
 		log.Printf("Error al guardar en Redis: %v", err)
@@ -87,6 +87,8 @@ func receiveTokenData(c *gin.Context) {
 		})
 		return
 	}
+	descripcion := "Se guardó token en Redis para usuario: " + data.CodUsuario
+	insertarLog(0, "GUARDAR_TOKEN", descripcion)
 
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
@@ -101,19 +103,16 @@ func getToken(c *gin.Context) {
 	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
 
 	if err != nil {
-		// Si no existe la clave UserId en Redis
 		fmt.Printf("Error de Redis: %v\n", err)
 		c.JSON(401, gin.H{"error": "Sesión no encontrada o expirada"})
 		return
 	}
 
-	// 2. Comparamos el valor obtenido (el token guardado) con el req.Token
 	if val != req.Token {
 		c.JSON(401, gin.H{"error": "El token no coincide para este usuario"})
 		return
 	}
 
-	// 3. Si todo coincide
 	c.JSON(200, gin.H{
 		"message": "Token validado correctamente",
 		"userId":  req.UserId,

@@ -264,8 +264,8 @@ type ImportSchedule struct {
 }
 
 type NewToken struct {
-	UserId string `json:"userId"`
-	Token  string `json:"token"`
+	CodUsuario string `json:"codUsuario"`
+	Token      string `json:"token"`
 }
 
 type RequestToken struct {

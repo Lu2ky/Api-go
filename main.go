@@ -119,9 +119,6 @@ func main() {
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
 	//router.Run(":8080")
-
-	// logs
-	router.POST("/addLog", addLog)
 }
 func method(c *gin.Context) {}
 

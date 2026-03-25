@@ -34,7 +34,19 @@ func auth(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
+	var userID int
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		User.User,
+	).Scan(&userID)
 
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
+
+
+	insertarLog(userID,"LOGIN","El usuario inició sesión",)
 	c.JSON(200, gin.H{
 		"Token":    token,
 		"UserAuth": userU,
@@ -172,6 +184,7 @@ func createUser(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	insertarLog(0,"CREAR_USUARIO","Se creó el usuario: "+req.User,)
 
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
@@ -261,6 +274,7 @@ func createAdmin(c *gin.Context) {
 		req.User,
 		req.Pass,
 	)
+	insertarLog(0,"CREAR_ADMIN","Se creó un administrador: "+req.User,)
 
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -358,6 +372,13 @@ func changeusrpasswd(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	var userID int
+	err = db.QueryRow("SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",req.User,).Scan(&userID)
+
+	if err != nil {log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
+	insertarLog(userID,"CAMBIAR_CONTRASEÑA","El usuario cambió su contraseña",)
 	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})
 }
 
