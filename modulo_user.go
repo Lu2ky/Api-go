@@ -98,17 +98,24 @@ func receiveTokenData(c *gin.Context) {
 // Obtener token de la base de datos
 func getToken(c *gin.Context) {
 	var req RequestToken
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": "JSON mal formado"})
-		return
-	}
+	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
 
-	val, err := rdb.Get(c.Request.Context(), req.Token).Result()
 	if err != nil {
+		// Si no existe la clave UserId en Redis
 		fmt.Printf("Error de Redis: %v\n", err)
-		c.JSON(404, gin.H{"error": "Token no encontrado"})
+		c.JSON(401, gin.H{"error": "Sesión no encontrada o expirada"})
 		return
 	}
 
-	c.JSON(200, gin.H{"userId": val})
+	// 2. Comparamos el valor obtenido (el token guardado) con el req.Token
+	if val != req.Token {
+		c.JSON(401, gin.H{"error": "El token no coincide para este usuario"})
+		return
+	}
+
+	// 3. Si todo coincide
+	c.JSON(200, gin.H{
+		"message": "Token validado correctamente",
+		"userId":  req.UserId,
+	})
 }
