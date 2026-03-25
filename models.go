@@ -202,10 +202,10 @@ type MuteNotification struct {
 	P_antelacionNotis string  `json:"antelacionNotis"`
 }
 type NewCorreo struct {
-	T_asunto        string `json:"asunto"`
-	T_contenido     string `json:"contenido"`
-	Dt_fechaEmision string `json:"fechaEmision"`
-	N_idToDoList    int    `json:"idToDoList"`
+	T_asunto        *string `json:"asunto"`
+	T_contenido     *string `json:"contenido"`
+	Dt_fechaEmision *string `json:"fechaEmision"`
+	N_idToDoList    *int    `json:"idToDoList"`
 }
 type UserData struct {
 	N_idUsuario        int     `json:"idUsuario"`
