@@ -201,7 +201,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 		return err
 	}
 
-	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
+	userDN := fmt.Sprintf("CN=Usuarios,CN=Users,DC=upbplanner,DC=local", username)
 
 	addReq := ldap.NewAddRequest(userDN, nil)
 
