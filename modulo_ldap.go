@@ -235,7 +235,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN := "CN=Usuario,CN=Users,DC=adhe,DC=local"
+	groupDN := "CN=Usuarios,CN=Users,DC=adhe,DC=local"
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
