@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -309,11 +310,11 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 	descripcion := "Se eliminó/recuperó recordatorio ID: " +
-	strconv.Itoa(delReminder.N_idRecordatorio) +
-	" | Usuario: " + strconv.Itoa(userID)
+		strconv.Itoa(delReminder.N_idRecordatorio) +
+		" | Usuario: " + strconv.Itoa(userID)
 
-insertarLogTx(tx, userID, "DELETE_RECORDATORIO", descripcion)
-	
+	insertarLogTx(tx, userID, "DELETE_RECORDATORIO", descripcion)
+
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",
