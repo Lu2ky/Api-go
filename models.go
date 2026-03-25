@@ -263,12 +263,7 @@ type ImportSchedule struct {
 	PeriodoAcademico string `json:"periodoAcademico"`
 }
 
-type NewToken struct {
-	CodUsuario string `json:"codUsuario"`
-	Token      string `json:"token"`
-}
-
-type RequestToken struct {
+type Token struct {
 	UserId string `json:"userId"`
 	Token  string `json:"token"`
 }
