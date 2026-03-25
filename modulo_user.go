@@ -101,6 +101,9 @@ func receiveTokenData(c *gin.Context) {
 func getToken(c *gin.Context) {
 	var req Token
 
+	fmt.Printf("ID del usuario: %v\n", req.UserId)
+	fmt.Printf("tOKEN: %v\n", req.Token)
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "JSON mal formado"})
 		return
