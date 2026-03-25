@@ -310,11 +310,11 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	descripcion := "Se eliminó/recuperó recordatorio ID: " +
-		strconv.Itoa(delReminder.N_idRecordatorio) +
-		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
+	//descripcion := "Se eliminó/recuperó recordatorio ID: " +
+		//strconv.Itoa(delReminder.N_idRecordatorio) +
+		//" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
 
-	insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
+	//insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
