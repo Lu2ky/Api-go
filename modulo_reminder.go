@@ -334,12 +334,8 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		" | Usuario: " + strconv.Itoa(userID)
 
 
-	err = insertarLog(userID, "DELETE_RECORDATORIO", descripcion)
-	if err != nil {
-		log.Printf("Error insertando log: %v", err)
-		c.JSON(500, gin.H{"error": "Error al guardar log"})
-		return
-	}
+	insertarLog(userID, "DELETE_RECORDATORIO", descripcion)
+
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
