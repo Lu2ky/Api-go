@@ -292,6 +292,7 @@ func updateReminderById(c *gin.Context) {
 }
 
 // Procedimiento: Eliminar recordatorio
+/*
 func deleteOrRecoverReminder(c *gin.Context) {
 
 	var delReminder DelReminder
@@ -321,3 +322,4 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		"rowsAffected": rowsAffected,
 	})
 }
+*/

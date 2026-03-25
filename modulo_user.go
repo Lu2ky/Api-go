@@ -100,6 +100,7 @@ func receiveTokenData(c *gin.Context) {
 // Obtener token de la base de datos
 func getToken(c *gin.Context) {
 	var req Token
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "JSON mal formado"})
 		return
