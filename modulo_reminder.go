@@ -303,18 +303,43 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
-	result, err := db.Exec("CALL eliminar_recordatorio(?)", delReminder.N_idRecordatorio)
+	var userID int
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Recordatorios WHERE N_idRecordatorio = ?",
+		delReminder.N_idRecordatorio,
+		).Scan(&userID)
 
+		if err != nil {
+		log.Printf("Error obteniendo usuario: %v", err)
+		c.JSON(500, gin.H{"error": "Error obteniendo usuario"})
+		return
+	}
+
+
+	result, err := db.Exec("CALL eliminar_recordatorio(?)", delReminder.N_idRecordatorio)
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	//descripcion := "Se eliminó/recuperó recordatorio ID: " +
-		//strconv.Itoa(delReminder.N_idRecordatorio) +
-		//" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
 
-	//insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
+		if err != nil {
+		log.Printf("Error obteniendo usuario: %v", err)
+		c.JSON(500, gin.H{"error": "Error obteniendo usuario"})
+		return
+	}
+	
+	descripcion := "Se eliminó/recuperó recordatorio ID: " +
+		strconv.Itoa(delReminder.N_idRecordatorio) +
+		" | Usuario: " + strconv.Itoa(userID)
+
+
+	err = insertarLog(userID, "DELETE_RECORDATORIO", descripcion)
+	if err != nil {
+		log.Printf("Error insertando log: %v", err)
+		c.JSON(500, gin.H{"error": "Error al guardar log"})
+		return
+	}
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
