@@ -181,11 +181,11 @@ func deletePersonalComment(c *gin.Context) {
 		return
 	}
 	
-	insertarLog(
-		delComment.N_idUsuario, 
-	 	"ELIMINAR_COMENTARIO",
-		descripcion,
-	  )
+	//insertarLog(
+	//	delComment.N_idUsuario, 
+	// 	"ELIMINAR_COMENTARIO",
+	//	descripcion,
+	//  )
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
