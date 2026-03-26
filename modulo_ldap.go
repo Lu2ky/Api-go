@@ -247,7 +247,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN := "CN=Usuario,CN=Users,DC=upbplanner,DC=local"
+	groupDN := "CN=Usuarios,CN=Users,DC=upbplanner,DC=local"
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
@@ -296,7 +296,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 		return err
 	}
 
-	userDN := fmt.Sprintf("CN=%s,CN=admin_upb_planner,DC=upbplanner,DC=local", username)
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
 
 	addReq := ldap.NewAddRequest(userDN, nil)
 
@@ -342,7 +342,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN := fmt.Sprintf("CN=%s,CN=admin_upb_planner,DC=upbplanner,DC=local", username)
+	groupDN := fmt.Sprintf("CN=admin_upb_planner,CN=Users,DC=upbplanner,DC=local", username)
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
@@ -397,7 +397,7 @@ func ChangeUserPassword(adminUser, adminPass, username, newPassword string) erro
 	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
 	quotedPwd := fmt.Sprintf("\"%s\"", newPassword)
 	utf16Pwd := utf16.Encode([]rune(quotedPwd))
-	pwdBytes := make([]byte, len(utf16Pwd)*2)
+	pwdBytes := make([]byUsuarioste, len(utf16Pwd)*2)
 	for i, v := range utf16Pwd {
 		binary.LittleEndian.PutUint16(pwdBytes[i*2:], v)
 	}
