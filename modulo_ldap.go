@@ -397,7 +397,7 @@ func ChangeUserPassword(adminUser, adminPass, username, newPassword string) erro
 	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
 	quotedPwd := fmt.Sprintf("\"%s\"", newPassword)
 	utf16Pwd := utf16.Encode([]rune(quotedPwd))
-	pwdBytes := make([]byUsuarioste, len(utf16Pwd)*2)
+	pwdBytes := make([]byte, len(utf16Pwd)*2)
 	for i, v := range utf16Pwd {
 		binary.LittleEndian.PutUint16(pwdBytes[i*2:], v)
 	}
