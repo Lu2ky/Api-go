@@ -107,17 +107,19 @@ func getToken(c *gin.Context) {
 	}
 
 	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
-
-	if err != nil {
-		fmt.Printf("Error de Redis: %v\n", err)
-		c.JSON(401, gin.H{"error": "Sesión no encontrada o expirada"})
-		return
-	}
-
-	if val != req.Token {
-		c.JSON(401, gin.H{"error": "El token no coincide para este usuario"})
-		return
-	}
+	    if err != nil {
+        if err == redis.Nil {
+            c.JSON(401, gin.H{"error": "Sesión no encontrada o expirada"})
+        } else {
+            fmt.Printf("Error de Redis: %v\n", err)
+            c.JSON(500, gin.H{"error": "Error interno del servidor"})
+        }
+        return
+    }
+	if subtle.ConstantTimeCompare([]byte(val), []byte(req.Token)) != 1 {
+        c.JSON(401, gin.H{"error": "El token no coincide para este usuario"})
+        return
+    }
 
 	c.JSON(200, gin.H{"userId": req.UserId})
 }
