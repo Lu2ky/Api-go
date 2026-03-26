@@ -100,6 +100,7 @@ type Tags struct {
 }
 type DelTag struct {
 	N_idEtiqueta int `json:"N_idEtiqueta"`
+	P_usuario    int `json:"P_usuario"`
 }
 type PersonalScheduleNewValue struct {
 	NewActivityValue   string `json:"NewActivityValue" binding:"required"`
