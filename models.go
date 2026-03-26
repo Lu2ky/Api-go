@@ -140,14 +140,17 @@ type ofcComments struct {
 }
 type new_ofcComments struct {
 	N_idHorario  int    `json:"N_idHorario"`
+	N_idUsuario  int    `json:"N_idUsuario"`
 	T_comentario string `json:"T_comentario"`
 }
 type edit_ofcComment struct {
 	N_idComentarios int    `json:"N_idComentarios"`
+	N_idUsuario  int    `json:"N_idUsuario"`
 	T_comentario    string `json:"T_comentario"`
 }
 type del_ofcComment struct {
 	N_idComentarios int `json:"N_idComentarios" binding:"required"`
+	N_idUsuario  int    `json:"N_idUsuario"`
 }
 type Reminders struct {
 	N_idToDoList        int            `json:"N_idToDoList"`
