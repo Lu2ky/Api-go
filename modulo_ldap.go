@@ -342,7 +342,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN := fmt.Sprintf("CN=admin_upb_planner,CN=Users,DC=upbplanner,DC=local", username)
+	groupDN :="CN=admin_upb_planner,CN=Users,DC=upbplanner,DC=local"
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
