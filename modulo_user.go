@@ -106,7 +106,7 @@ func getToken(c *gin.Context) {
 		return
 	}
 
-	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
+	val, err := rdb.Get(c.Request.Context(), "reset:"+req.UserId).Result()
 
 	if err != nil {
 		fmt.Printf("Error de Redis: %v\n", err)
