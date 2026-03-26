@@ -104,16 +104,16 @@ func addPersonalComment(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	//insertedID, _ := result.LastInsertId()
+	insertedID, _ := result.LastInsertId()
 	
 
-	// descripcion := "El id del comentario ingresado fue: " + strconv.FormatInt(insertedID, 10)
+	 descripcion := "El id del comentario ingresado fue: " + strconv.FormatInt(insertedID, 10)
 
-	// insertarLog(
-	//	newComment.N_idUsuario, 
-	//	"INSERTAR_COMENTARIO",
-	//	descripcion,
-	// )
+	 insertarLog(
+		newComment.N_idUsuario, 
+		"INSERTAR_COMENTARIO",
+		descripcion,
+	 )
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
@@ -145,13 +145,13 @@ func updatePersonalComment(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	// descripcion := "Se actualizó el comentario con id: " + strconv.Itoa(newComment.N_idComentarios)
+	 descripcion := "Se actualizó el comentario con id: " + strconv.Itoa(newComment.N_idComentarios)
 
-	//	insertarLog(
-	//		newComment.N_idUsuario, 
-	//		"ACTUALIZAR_COMENTARIO",
-	//		descripcion,
-	//	)
+		insertarLog(
+			newComment.N_idUsuario, 
+			"ACTUALIZAR_COMENTARIO",
+			descripcion,
+		)
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario editado correctamente",
@@ -181,11 +181,11 @@ func deletePersonalComment(c *gin.Context) {
 		return
 	}
 	
-	// insertarLog(
-	//	delComment.N_idUsuario, 
-	// 	"ELIMINAR_COMENTARIO",
-	//	descripcion,
-	 // )
+	insertarLog(
+		delComment.N_idUsuario, 
+	 	"ELIMINAR_COMENTARIO",
+		descripcion,
+	  )
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
