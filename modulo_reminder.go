@@ -305,7 +305,7 @@ func deleteOrRecoverReminder(c *gin.Context) {
 
 	var userID int
 	err = db.QueryRow(
-		"SELECT N_idUsuario FROM Recordatorios WHERE N_idRecordatorio = ?",
+		"SELECT N_idUsuario FROM Recordatorio WHERE N_idRecordatorio = ?",
 		delReminder.N_idRecordatorio,
 		).Scan(&userID)
 
