@@ -110,14 +110,14 @@ func getToken(c *gin.Context) {
 
 	if err != nil {
 		fmt.Printf("Error de Redis: %v\n", err)
-		c.JSON(401, gin.H{"mensaje": "Sesión no encontrada o expirada", "estado": false})
+		c.JSON(401, gin.H{"error": "Sesión no encontrada o expirada"})
 		return
 	}
 
 	if val != req.Token {
-		c.JSON(401, gin.H{"mensaje": "El token no coincide para este usuario", "estado": false})
+		c.JSON(401, gin.H{"error": "El token no coincide para este usuario"})
 		return
 	}
 
-	c.JSON(200, gin.H{"mensaje": "Token válido", "estado": true})
+	c.JSON(200, gin.H{"userId": req.UserId})
 }
