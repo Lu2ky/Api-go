@@ -312,7 +312,7 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-}
+
 
 	userID := delReminder.P_usuario
 
