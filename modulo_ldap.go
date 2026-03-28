@@ -293,16 +293,26 @@ func createAdmin(c *gin.Context) {
 		req.User,
 		req.Pass,
 	)
-	insertarLog(0,"CREAR_ADMIN","Se creó un administrador: "+req.User,)
+	var userID int
+
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		req.User,
+	).Scan(&userID)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
+		log.Println("Error obteniendo admin para log:", err)
+		userID = 0
 	}
+
+	descripcion := "Se creó administrador | ID: " +
+		strconv.Itoa(userID) +
+		" | Username: " + req.User
+
+	insertarLog(userID, "CREAR_ADMIN", descripcion)
 
 	c.JSON(200, gin.H{"message": "Admin creado correctamente"})
 }
-
 func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error {
 	l, err := dialLDAPS()
 	if err != nil {
