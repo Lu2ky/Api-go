@@ -187,11 +187,27 @@ func createUser(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	insertarLog(0,"CREAR_USUARIO","Se creó el usuario: "+req.User,)
+	var userID int
+	
+err = db.QueryRow(
+	"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+	req.User,
+).Scan(&userID)
+
+if err != nil {
+	log.Println("Error obteniendo usuario para log:", err)
+	userID = 0
+}
+
+descripcion := "Se creó el usuario | ID: " +
+	strconv.Itoa(userID) +
+	" | Username: " + req.User
+
+insertarLog(userID, "CREAR_USUARIO", descripcion)
 
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
-
+	
 func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 	l, err := dialLDAPS()
 	if err != nil {
