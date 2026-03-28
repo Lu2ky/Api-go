@@ -45,8 +45,11 @@ func auth(c *gin.Context) {
 		userID = 0
 	}
 
+descripcion := "Usuario inició sesión | ID: " +
+	strconv.Itoa(userID) +
+	" | Username: " + User.User
 
-	insertarLog(userID,"LOGIN","El usuario inició sesión",)
+insertarLog(userID, "LOGIN", descripcion)
 	c.JSON(200, gin.H{
 		"Token":    token,
 		"UserAuth": userU,
