@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf16"
 
@@ -18,7 +19,41 @@ import (
 
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
-func auth(c *gin.Context) {
+// Esta madre se encarga de detener abruptamente el tráfico si la validación resulta ser no válida
+func (j JWTManager) AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// Obtener el token del header "Authorization: Bearer <token>"
+		authHeader := c.GetHeader("Authorization")
+
+		// Si la cabecera llega vacía, entonces se detiene la ejecución
+		if authHeader == "" {
+			c.JSON(401, gin.H{"error": "Se requiere autenticación"})
+			c.Abort()
+			return
+		}
+
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+
+		// Validar el token
+		claims, err := j.Validate(tokenStr)
+
+		if err != nil {
+			fmt.Printf("Error de validación: %v\n", err)
+			c.JSON(401, gin.H{"error": "Token no autorizado"})
+			c.Abort()
+			return
+		}
+
+		// devolver los claims del usuario
+		c.Set("user_claims", claims)
+
+		// El token es válido, continúa hacia la ruta solicitada
+		c.Next()
+	}
+}
+
+func Auth(c *gin.Context) {
 	var User UserAuth
 	err := c.BindJSON(&User)
 	if err != nil {

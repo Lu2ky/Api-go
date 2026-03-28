@@ -19,8 +19,8 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
-	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	err := godotenv.Load() // Load enviorement variables
+	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	//err := godotenv.Load() // Load enviorement variables
 
 	if err != nil {
 		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
@@ -59,6 +59,7 @@ func main() {
 	registerV1Routes(v1)
 
 	router.Run("0.0.0.0:8080") // The port number for expone the API
+
 	//router.Run(":8080")
 }
 
@@ -107,7 +108,7 @@ func registerLegacyRoutes(router gin.IRoutes) {
 	router.GET("/GetUserInfo/:id", GetUserInfo)
 
 	// LDAP
-	router.POST("/auth", auth)
+	router.POST("/auth", Auth)
 	router.POST("/addauthuser", createUser)
 	router.POST("/addadmin", createAdmin)
 	router.POST("/changepassword", changeusrpasswd)
@@ -117,52 +118,58 @@ func registerLegacyRoutes(router gin.IRoutes) {
 	router.POST("/getToken", getToken)
 }
 
-func registerV1Routes(router gin.IRoutes) {
-	// Official schedules
-	router.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
-	router.POST("/schedules/activities/times", getActivitiesTimesData)
-	router.GET("/academic-periods", getAcademicPeriods)
+func registerV1Routes(router gin.IRouter) {
 
-	// Personal comments
-	router.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
-	router.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
-	router.POST("/comments/personal", addPersonalComment)
-	router.POST("/comments/personal/update", updatePersonalComment)
-	router.POST("/comments/personal/delete", deletePersonalComment)
+	autho := JWTManager{Secret: []byte(os.Getenv("JWT_SECRET"))}
 
-	// Personal schedules
-	router.GET("/schedules/personal/users/:id", getPersonalScheduleByUserId)
-	router.POST("/schedules/personal", addPersonalActivity)
-	router.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
-	router.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
-	router.GET("/course-types", GetTiposCurso)
+	protected := router.Group("/")
+	protected.Use(autho.AuthMiddleware())
+	{
+		// Official schedules
+		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
+		protected.POST("/schedules/activities/times", getActivitiesTimesData)
+		protected.GET("/academic-periods", getAcademicPeriods)
 
-	// Tags
-	router.GET("/tags/users/:id", GetTagsByUserId)
-	router.GET("/tags/users/:id/reminders/:reminderId", GetTagsByUserIdAndReminderId)
-	router.POST("/tags/delete", deleteTag)
+		// Personal comments
+		protected.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
+		protected.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
+		protected.POST("/comments/personal", addPersonalComment)
+		protected.POST("/comments/personal/update", updatePersonalComment)
+		protected.POST("/comments/personal/delete", deletePersonalComment)
 
-	// Reminders
-	router.GET("/reminders/users/:id", GetRemindersByUserId)
-	router.GET("/reminders/users/:id/tags", GetRemindersTagsByUserId)
-	router.POST("/reminders", addReminder)
-	router.POST("/reminders/update", updateReminderById)
-	router.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
+		// Personal schedules
+		protected.GET("/schedules/personal/users/:id", getPersonalScheduleByUserId)
+		protected.POST("/schedules/personal", addPersonalActivity)
+		protected.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
+		protected.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
+		protected.GET("/course-types", GetTiposCurso)
 
-	// Notifications and emails
-	router.GET("/notifications/users/:id", GetNotificaciones)
-	router.POST("/notifications", addNotificacion)
-	router.POST("/notifications/mute", muteNotification)
-	router.POST("/emails", addCorreo)
+		// Tags
+		protected.GET("/tags/users/:id", GetTagsByUserId)
+		protected.GET("/tags/users/:id/reminders/:reminderId", GetTagsByUserIdAndReminderId)
+		protected.POST("/tags/delete", deleteTag)
 
-	// Schedule import
-	router.POST("/schedules/import", importSchedule)
+		// Reminders
+		protected.GET("/reminders/users/:id", GetRemindersByUserId)
+		protected.GET("/reminders/users/:id/tags", GetRemindersTagsByUserId)
+		protected.POST("/reminders", addReminder)
+		protected.POST("/reminders/update", updateReminderById)
+		protected.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
 
-	// User configuration
-	router.GET("/users/:id", GetUserInfo)
+		// Notifications and emails
+		protected.GET("/notifications/users/:id", GetNotificaciones)
+		protected.POST("/notifications", addNotificacion)
+		protected.POST("/notifications/mute", muteNotification)
+		protected.POST("/emails", addCorreo)
 
+		// Schedule import
+		protected.POST("/schedules/import", importSchedule)
+
+		// User configuration
+		protected.GET("/users/:id", GetUserInfo)
+	}
 	// LDAP/auth
-	router.POST("/auth/login", auth)
+	router.POST("/auth/login", Auth)
 	router.POST("/auth/users", createUser)
 	router.POST("/auth/admins", createAdmin)
 	router.POST("/auth/change-password", changeusrpasswd)
