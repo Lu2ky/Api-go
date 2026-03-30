@@ -40,6 +40,7 @@ func GetNotificaciones(c *gin.Context) {
 			&noti.T_nombre,
 			&noti.T_descripcion,
 			&noti.Dt_fechaEmision,
+			&noti.B_estado,
 		)
 
 		if err != nil {
