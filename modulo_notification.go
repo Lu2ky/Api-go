@@ -133,15 +133,13 @@ func deleteNotifications(c *gin.Context) {
 		return
 	}
 
-	/*
-		descripcion := "Se actualizó elimaron los recordatorios con IDs: " + strconv.Itoa(ids.Ids)
+	//descripcion := "Se actualizó elimaron los recordatorios con IDs: " + strconv.Itoa(ids.Ids)
 
+	//insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+	c.JSON(200, gin.H{
+		"message": "Notificaciones eliminadas correctamente",
+	})
 
-			insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
-			c.JSON(200, gin.H{
-				"message": "Recordatorio creado correctamente",
-			})
-	*/
 }
 
 func muteNotification(c *gin.Context) {
