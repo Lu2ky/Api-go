@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -94,7 +95,7 @@ func addNotificacion(c *gin.Context) {
 	//descripcion := "Se creó una notificación con id: " + strconv.FormatInt(insertedID, 10)
 
 	// insertarLog(
-	//	notiNewValue.N_idUsuario, 
+	//	notiNewValue.N_idUsuario,
 	//	"CREAR_NOTIFICACION",
 	//	descripcion,
 	// )
