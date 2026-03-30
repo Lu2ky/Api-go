@@ -19,8 +19,8 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
-	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	//err := godotenv.Load() // Load enviorement variables
+	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	err := godotenv.Load() // Load enviorement variables
 
 	if err != nil {
 		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
@@ -120,10 +120,10 @@ func registerLegacyRoutes(router gin.IRoutes) {
 
 func registerV1Routes(router gin.IRouter) {
 
-	autho := JWTManager{Secret: []byte(os.Getenv("JWT_SECRET"))}
+	//autho := JWTManager{Secret: []byte(os.Getenv("JWT_SECRET"))}
 
 	protected := router.Group("/")
-	protected.Use(autho.AuthMiddleware())
+	//protected.Use(autho.AuthMiddleware())
 	{
 		// Official schedules
 		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
@@ -159,7 +159,6 @@ func registerV1Routes(router gin.IRouter) {
 		// Notifications and emails
 		protected.GET("/notifications/users/:id", GetNotificaciones)
 		protected.POST("/notifications", addNotificacion)
-		protected.POST("/notifications/mute", muteNotification)
 		protected.POST("/emails", addCorreo)
 
 		// Schedule import
@@ -167,6 +166,7 @@ func registerV1Routes(router gin.IRouter) {
 
 		// User configuration
 		protected.GET("/users/:id", GetUserInfo)
+		protected.POST("/notifications/mute", muteNotification)
 	}
 	// LDAP/auth
 	router.POST("/auth/login", Auth)
