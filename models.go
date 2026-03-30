@@ -221,6 +221,7 @@ type Notificacion struct {
 	T_nombre         string `json:"nombre"`
 	T_descripcion    string `json:"descripcion"`
 	Dt_fechaEmision  string `json:"fechaEmision"`
+	B_estado         string `json:"estado"`
 }
 type NewNotificacion struct {
 	T_nombre        string `json:"nombre"`
@@ -271,4 +272,8 @@ type ImportSchedule struct {
 type Token struct {
 	UserId string `json:"userId"`
 	Token  string `json:"token"`
+}
+
+type DeleteNotificacion struct {
+	Ids string `json:"ids"`
 }

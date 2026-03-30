@@ -303,16 +303,12 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
-
-
-
 	result, err := db.Exec("CALL eliminar_recordatorio(?)", delReminder.N_idRecordatorio)
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-
 
 	userID := delReminder.P_usuario
 

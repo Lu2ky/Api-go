@@ -104,6 +104,45 @@ func addNotificacion(c *gin.Context) {
 	})
 }
 
+func deleteNotifications(c *gin.Context) {
+
+	var idsNotifications DeleteNotificacion
+
+	//	Se asignan los valores el JSON a la estructura reminderNewValue
+	err := c.BindJSON(&idsNotifications)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	result, err := db.Exec("CALL leer_noti(?)",
+		idsNotifications.Ids,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "Notificaciones no halladas"})
+		return
+	}
+
+	/*
+		descripcion := "Se actualizó elimaron los recordatorios con IDs: " + strconv.Itoa(ids.Ids)
+
+
+			insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+			c.JSON(200, gin.H{
+				"message": "Recordatorio creado correctamente",
+			})
+	*/
+}
+
 func muteNotification(c *gin.Context) {
 
 	var notiNewValue MuteNotification
