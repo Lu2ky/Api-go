@@ -141,7 +141,7 @@ func muteNotification(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"message": "Notificacion MUTEADA correctamente",
+		"message": "Preferencias actualizadas",
 	})
 }
 
