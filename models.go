@@ -146,12 +146,12 @@ type new_ofcComments struct {
 }
 type edit_ofcComment struct {
 	N_idComentarios int    `json:"N_idComentarios"`
-	N_idUsuario  int    `json:"N_idUsuario"`
+	N_idUsuario     int    `json:"N_idUsuario"`
 	T_comentario    string `json:"T_comentario"`
 }
 type del_ofcComment struct {
 	N_idComentarios int `json:"N_idComentarios" binding:"required"`
-	N_idUsuario  int    `json:"N_idUsuario"`
+	N_idUsuario     int `json:"N_idUsuario"`
 }
 type Reminders struct {
 	N_idToDoList        int            `json:"N_idToDoList"`
@@ -232,7 +232,6 @@ type MuteNotification struct {
 	P_idUsuario       int     `json:"idUsuario"`
 	P_correo          *string `json:"correo"`
 	P_antelacionNotis *string `json:"antelacionNotis"`
-	P_telefono        *string `json:"telefono"`
 }
 type NewCorreo struct {
 	T_asunto        string `json:"asunto"`

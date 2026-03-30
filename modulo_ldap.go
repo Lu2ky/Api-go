@@ -46,11 +46,11 @@ func auth(c *gin.Context) {
 		userID = 0
 	}
 
-descripcion := "Usuario inició sesión | ID: " +
-	strconv.Itoa(userID) +
-	" | Username: " + User.User
+	descripcion := "Usuario inició sesión | ID: " +
+		strconv.Itoa(userID) +
+		" | Username: " + User.User
 
-insertarLog(userID, "LOGIN", descripcion)
+	insertarLog(userID, "LOGIN", descripcion)
 	c.JSON(200, gin.H{
 		"Token":    token,
 		"UserAuth": userU,
@@ -189,26 +189,26 @@ func createUser(c *gin.Context) {
 		return
 	}
 	var userID int
-	
-err = db.QueryRow(
-	"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
-	req.User,
-).Scan(&userID)
 
-if err != nil {
-	log.Println("Error obteniendo usuario para log:", err)
-	userID = 0
-}
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		req.User,
+	).Scan(&userID)
 
-descripcion := "Se creó el usuario | ID: " +
-	strconv.Itoa(userID) +
-	" | Username: " + req.User
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
 
-insertarLog(userID, "CREAR_USUARIO", descripcion)
+	descripcion := "Se creó el usuario | ID: " +
+		strconv.Itoa(userID) +
+		" | Username: " + req.User
+
+	insertarLog(userID, "CREAR_USUARIO", descripcion)
 
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
-	
+
 func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 	l, err := dialLDAPS()
 	if err != nil {
@@ -372,7 +372,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN :="CN=admin_upb_planner,CN=Users,DC=upbplanner,DC=local"
+	groupDN := "CN=admin_upb_planner,CN=Users,DC=upbplanner,DC=local"
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
@@ -403,12 +403,13 @@ func changeusrpasswd(c *gin.Context) {
 		return
 	}
 	var userID int
-	err = db.QueryRow("SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",req.User,).Scan(&userID)
+	err = db.QueryRow("SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?", req.User).Scan(&userID)
 
-	if err != nil {log.Println("Error obteniendo usuario para log:", err)
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
 		userID = 0
 	}
-	insertarLog(userID,"CAMBIAR_CONTRASEÑA","El usuario cambió su contraseña",)
+	insertarLog(userID, "CAMBIAR_CONTRASEÑA", "El usuario cambió su contraseña")
 	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})
 }
 
