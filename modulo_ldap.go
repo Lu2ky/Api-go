@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 	"unicode/utf16"
 
@@ -17,7 +19,41 @@ import (
 
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
-func auth(c *gin.Context) {
+// Esta madre se encarga de detener abruptamente el tráfico si la validación resulta ser no válida
+func (j JWTManager) AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// Obtener el token del header "Authorization: Bearer <token>"
+		authHeader := c.GetHeader("Authorization")
+
+		// Si la cabecera llega vacía, entonces se detiene la ejecución
+		if authHeader == "" {
+			c.JSON(401, gin.H{"error": "Se requiere autenticación"})
+			c.Abort()
+			return
+		}
+
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+
+		// Validar el token
+		claims, err := j.Validate(tokenStr)
+
+		if err != nil {
+			fmt.Printf("Error de validación: %v\n", err)
+			c.JSON(401, gin.H{"error": "Token no autorizado"})
+			c.Abort()
+			return
+		}
+
+		// devolver los claims del usuario
+		c.Set("user_claims", claims)
+
+		// El token es válido, continúa hacia la ruta solicitada
+		c.Next()
+	}
+}
+
+func Auth(c *gin.Context) {
 	var User UserAuth
 	err := c.BindJSON(&User)
 	if err != nil {
@@ -34,7 +70,22 @@ func auth(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
+	var userID int
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		User.User,
+	).Scan(&userID)
 
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
+
+	descripcion := "Usuario inició sesión | ID: " +
+		strconv.Itoa(userID) +
+		" | Username: " + User.User
+
+	insertarLog(userID, "LOGIN", descripcion)
 	c.JSON(200, gin.H{
 		"Token":    token,
 		"UserAuth": userU,
@@ -86,8 +137,16 @@ func (j JWTManager) Validate(tokenStr string) (*Claims, error) {
 	return claims, nil
 }
 
+func dialLDAPS() (*ldap.Conn, error) {
+	return ldap.DialURL("ldaps://"+os.Getenv("LDAP_ADDR")+":636",
+		ldap.DialWithTLSConfig(&tls.Config{
+			InsecureSkipVerify: true,
+		}),
+	)
+}
+
 func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := dialLDAPS()
 	if err != nil {
 		return "", nil, err
 	}
@@ -95,20 +154,13 @@ func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) 
 
 	l.SetTimeout(5 * time.Second)
 
-	err = l.StartTLS(&tls.Config{
-		InsecureSkipVerify: true,
-	})
-	if err != nil {
-		return "", nil, err
-	}
-
-	err = l.Bind(user+"@adhe.local", pass)
+	err = l.Bind(user+"@upbplanner.local", pass)
 	if err != nil {
 		return "", nil, err
 	}
 
 	searchRequest := ldap.NewSearchRequest(
-		"DC=adhe,DC=local",
+		"DC=upbplanner,DC=local",
 		ldap.ScopeWholeSubtree,
 		ldap.NeverDerefAliases,
 		0,
@@ -151,6 +203,7 @@ func ConnectLDAP(user string, pass string, j JWTManager) (string, *User, error) 
 
 	return token, u, nil
 }
+
 func createUser(c *gin.Context) {
 	var req UserAuth
 
@@ -170,27 +223,40 @@ func createUser(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	var userID int
+
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		req.User,
+	).Scan(&userID)
+
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
+
+	descripcion := "Se creó el usuario | ID: " +
+		strconv.Itoa(userID) +
+		" | Username: " + req.User
+
+	insertarLog(userID, "CREAR_USUARIO", descripcion)
 
 	c.JSON(200, gin.H{"message": "Usuario creado correctamente"})
 }
+
 func CreateLDAPUser(adminUser, adminPass, username, password string) error {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := dialLDAPS()
 	if err != nil {
 		return err
 	}
 	defer l.Close()
 
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+	err = l.Bind(adminUser+"@upbplanner.local", adminPass)
 	if err != nil {
 		return err
 	}
 
-	err = l.Bind(adminUser+"@adhe.local", adminPass)
-	if err != nil {
-		return err
-	}
-
-	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=adhe,DC=local", username)
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
 
 	addReq := ldap.NewAddRequest(userDN, nil)
 
@@ -203,7 +269,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 
 	addReq.Attribute("cn", []string{username})
 	addReq.Attribute("sAMAccountName", []string{username})
-	addReq.Attribute("userPrincipalName", []string{username + "@adhe.local"})
+	addReq.Attribute("userPrincipalName", []string{username + "@upbplanner.local"})
 	addReq.Attribute("displayName", []string{username})
 	addReq.Attribute("userAccountControl", []string{"544"})
 
@@ -227,6 +293,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 	if err != nil {
 		return fmt.Errorf("error seteando password: %v", err)
 	}
+
 	modEnable := ldap.NewModifyRequest(userDN, nil)
 	modEnable.Replace("userAccountControl", []string{"512"})
 
@@ -235,7 +302,7 @@ func CreateLDAPUser(adminUser, adminPass, username, password string) error {
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN := "CN=Usuario,CN=Users,DC=adhe,DC=local"
+	groupDN := "CN=Usuarios,CN=Users,DC=upbplanner,DC=local"
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
@@ -260,34 +327,41 @@ func createAdmin(c *gin.Context) {
 		os.Getenv("ADMIN_LDAP_ADMIN"),
 		os.Getenv("ADMIN_LDAP_PASS"),
 		req.User,
-		req.Pass,		
+		req.Pass,
 	)
+	var userID int
+
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
+		req.User,
+	).Scan(&userID)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
+		log.Println("Error obteniendo admin para log:", err)
+		userID = 0
 	}
 
+	descripcion := "Se creó administrador | ID: " +
+		strconv.Itoa(userID) +
+		" | Username: " + req.User
+
+	insertarLog(userID, "CREAR_ADMIN", descripcion)
+
 	c.JSON(200, gin.H{"message": "Admin creado correctamente"})
-}	
+}
 func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error {
-	l, err := ldap.DialURL("ldap://" + os.Getenv("LDAP_ADDR") + ":" + os.Getenv("LDAP_PORT"))
+	l, err := dialLDAPS()
 	if err != nil {
 		return err
 	}
 	defer l.Close()
 
-	err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+	err = l.Bind(adminUser+"@upbplanner.local", adminPass)
 	if err != nil {
 		return err
 	}
 
-	err = l.Bind(adminUser+"@adhe.local", adminPass)
-	if err != nil {
-		return err
-	}
-
-	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=adhe,DC=local", username)
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
 
 	addReq := ldap.NewAddRequest(userDN, nil)
 
@@ -300,7 +374,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 
 	addReq.Attribute("cn", []string{username})
 	addReq.Attribute("sAMAccountName", []string{username})
-	addReq.Attribute("userPrincipalName", []string{username + "@adhe.local"})
+	addReq.Attribute("userPrincipalName", []string{username + "@upbplanner.local"})
 	addReq.Attribute("displayName", []string{username})
 	addReq.Attribute("userAccountControl", []string{"544"})
 
@@ -324,6 +398,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 	if err != nil {
 		return fmt.Errorf("error seteando password: %v", err)
 	}
+
 	modEnable := ldap.NewModifyRequest(userDN, nil)
 	modEnable.Replace("userAccountControl", []string{"512"})
 
@@ -332,7 +407,7 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 		return fmt.Errorf("error habilitando usuario: %v", err)
 	}
 
-	groupDN := fmt.Sprintf("CN=%s,CN=admin_upb_planner,DC=adhe,DC=local", username)
+	groupDN := "CN=admin_upb_planner,CN=Users,DC=upbplanner,DC=local"
 
 	modGroup := ldap.NewModifyRequest(groupDN, nil)
 	modGroup.Add("member", []string{userDN})
@@ -345,4 +420,60 @@ func CreateLDAPAdminUser(adminUser, adminPass, username, password string) error 
 	return nil
 }
 
-// Last test for today :P -Luky (CI/CD test)
+func changeusrpasswd(c *gin.Context) {
+	var req UserAuth
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON inválido"})
+		return
+	}
+	err := ChangeUserPassword(
+		os.Getenv("ADMIN_LDAP_ADMIN"),
+		os.Getenv("ADMIN_LDAP_PASS"),
+		req.User,
+		req.Pass,
+	)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	var userID int
+	err = db.QueryRow("SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?", req.User).Scan(&userID)
+
+	if err != nil {
+		log.Println("Error obteniendo usuario para log:", err)
+		userID = 0
+	}
+	insertarLog(userID, "CAMBIAR_CONTRASEÑA", "El usuario cambió su contraseña")
+	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})
+}
+
+func ChangeUserPassword(adminUser, adminPass, username, newPassword string) error {
+	l, err := dialLDAPS()
+	if err != nil {
+		return err
+	}
+	defer l.Close()
+
+	err = l.Bind(adminUser+"@upbplanner.local", adminPass)
+	if err != nil {
+		return err
+	}
+
+	userDN := fmt.Sprintf("CN=%s,CN=Users,DC=upbplanner,DC=local", username)
+	quotedPwd := fmt.Sprintf("\"%s\"", newPassword)
+	utf16Pwd := utf16.Encode([]rune(quotedPwd))
+	pwdBytes := make([]byte, len(utf16Pwd)*2)
+	for i, v := range utf16Pwd {
+		binary.LittleEndian.PutUint16(pwdBytes[i*2:], v)
+	}
+
+	modPwd := ldap.NewModifyRequest(userDN, nil)
+	modPwd.Replace("unicodePwd", []string{string(pwdBytes)})
+
+	err = l.Modify(modPwd)
+	if err != nil {
+		return fmt.Errorf("error cambiando password: %v", err)
+	}
+	return nil
+}

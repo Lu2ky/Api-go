@@ -133,6 +133,11 @@ func deleteTag(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
+	
+	descripcion := "Se eliminó/recuperó etiqueta ID: " + strconv.Itoa(delTag.N_idEtiqueta)
+
+insertarLog(delTag.P_usuario, "DELETE_ETIQUETA", descripcion)
+
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{

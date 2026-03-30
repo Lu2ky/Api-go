@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net/http"
+
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +19,7 @@ func GetUserInfo(c *gin.Context) {
 	//	Consulta
 	rows, err := db.Query(
 		`
-		SELECT u.N_idUsuario, u.T_nombre, u.T_correo, u.N_semestreActual, u.T_programa, u.TM_antelacionNotis
+		SELECT u.N_idUsuario, u.T_nombre, u.T_correo, u.N_semestreActual, u.T_programa, u.TM_antelacionNotis, u.N_celular
 		FROM Usuarios u
 		WHERE u.T_codUsuario = ?
 		`,
@@ -41,6 +45,7 @@ func GetUserInfo(c *gin.Context) {
 			&userData.N_semestreActual,
 			&userData.T_programa,
 			&userData.TM_antelacionNotis,
+			&userData.N_celular,
 		)
 
 		if err != nil {
@@ -58,4 +63,61 @@ func GetUserInfo(c *gin.Context) {
 
 	c.JSON(200, userDataArray)
 
+}
+
+// Guardar datos del token en la base de datos
+func receiveTokenData(c *gin.Context) {
+	var data Token
+
+	// Leer json
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "El formato del JSON es incorrecto o faltan campos",
+		})
+		return
+	}
+
+	// Guardar en Redis
+	err := rdb.Set(ctx, "reset:"+data.UserId, data.Token, 15*time.Minute).Err()
+
+	if err != nil {
+		log.Printf("Error al guardar en Redis: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+	descripcion := "Se guardó token en Redis para usuario: " + data.UserId
+	insertarLog(0, "GUARDAR_TOKEN", descripcion)
+
+	// Respuesta exitosa
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Token guardado correctamente en Redis",
+	})
+}
+
+// Obtener token de la base de datos
+func getToken(c *gin.Context) {
+	var req Token
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON mal formado"})
+		return
+	}
+
+	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
+
+	if err != nil {
+		fmt.Printf("Error de Redis: %v\n", err)
+		c.JSON(401, gin.H{"error": "Sesión no encontrada o expirada"})
+		return
+	}
+
+	if val != req.Token {
+		c.JSON(401, gin.H{"error": "El token no coincide para este usuario"})
+		return
+	}
+
+	c.JSON(200, gin.H{"userId": req.UserId})
 }

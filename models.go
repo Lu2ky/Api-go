@@ -34,6 +34,30 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// ESTO ES PARA LAS COLISIONES
+type CheckActivitiesTimesData struct {
+	T_idUsuario int `json:"idUsuario"`
+	N_dia       int `json:"dia"`
+}
+
+type ActivitiesTimesData struct {
+	N_iduser    int     `json:"iduser"`
+	N_idcourse  int     `json:"idcourse"`
+	N_dia       int     `json:"dia"`
+	StartHour   *string `json:"StartHour"`
+	EndHour     *string `json:"EndHour"`
+	FechaInicio *string `json:"FechaInicio"`
+	FechaFinal  *string `json:"FechaFinal"`
+	IsDeleted   *bool   `json:"IsDeleted"`
+}
+
+type AcademicPeriod struct {
+	N_idPeriodoAcademico int    `json:"idPeriodoAcademico"`
+	T_nombre             string `json:"nombre"`
+	Dt_fechaInicio       string `json:"fechaInicio"`
+	Dt_fechaFinal        string `json:"fechaFinal "`
+}
+
 type OfficialSchedule struct {
 	N_idHorario            int             `json:"N_idHorario"`
 	N_iduser               int             `json:"N_iduser"`
@@ -49,6 +73,8 @@ type OfficialSchedule struct {
 	Credits                sql.NullFloat64 `json:"Credits"`
 	Standardofcalification string          `json:"Standardofcalification"`
 	Campus                 string          `json:"Campus"`
+	N_idPeriodoAcademico   int             `json:"IdPeriodoAcademico"`
+	Periodo_academico      string          `json:"PeriodoAcademico"`
 	FechaInicio            string          `json:"FechaInicio"`
 	FechaFinal             string          `json:"FechaFinal"`
 }
@@ -74,6 +100,7 @@ type Tags struct {
 }
 type DelTag struct {
 	N_idEtiqueta int `json:"N_idEtiqueta"`
+	P_usuario    int `json:"P_usuario"`
 }
 type PersonalScheduleNewValue struct {
 	NewActivityValue   string `json:"NewActivityValue" binding:"required"`
@@ -114,14 +141,17 @@ type ofcComments struct {
 }
 type new_ofcComments struct {
 	N_idHorario  int    `json:"N_idHorario"`
+	N_idUsuario  int    `json:"N_idUsuario"`
 	T_comentario string `json:"T_comentario"`
 }
 type edit_ofcComment struct {
 	N_idComentarios int    `json:"N_idComentarios"`
+	N_idUsuario     int    `json:"N_idUsuario"`
 	T_comentario    string `json:"T_comentario"`
 }
 type del_ofcComment struct {
 	N_idComentarios int `json:"N_idComentarios" binding:"required"`
+	N_idUsuario     int `json:"N_idUsuario"`
 }
 type Reminders struct {
 	N_idToDoList        int            `json:"N_idToDoList"`
@@ -176,7 +206,9 @@ type EditReminder struct {
 }
 type DelReminder struct {
 	N_idRecordatorio int `json:"N_idRecordatorio"`
+	P_usuario        int `json:"P_usuario"`
 }
+
 type TipoCurso struct {
 	N_idTipoCurso int    `json:"N_idTipoCurso"`
 	T_nombre      string `json:"T_nombre"`
@@ -199,7 +231,7 @@ type NewNotificacion struct {
 type MuteNotification struct {
 	P_idUsuario       int     `json:"idUsuario"`
 	P_correo          *string `json:"correo"`
-	P_antelacionNotis string  `json:"antelacionNotis"`
+	P_antelacionNotis *string `json:"antelacionNotis"`
 }
 type NewCorreo struct {
 	T_asunto        string `json:"asunto"`
@@ -214,6 +246,7 @@ type UserData struct {
 	N_semestreActual   *int    `json:"semestreActual"`
 	T_programa         *string `json:"programa"`
 	TM_antelacionNotis *string `json:"antelacionNotis"`
+	N_celular          *string `json:"celular"`
 }
 
 type ImportSchedule struct {
@@ -233,4 +266,9 @@ type ImportSchedule struct {
 	HoraFin          string `json:"horaFin"`
 	Salon            string `json:"salon"`
 	PeriodoAcademico string `json:"periodoAcademico"`
+}
+
+type Token struct {
+	UserId string `json:"userId"`
+	Token  string `json:"token"`
 }
