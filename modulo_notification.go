@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 
@@ -170,11 +171,27 @@ func muteNotification(c *gin.Context) {
 
 	rowsAffected, _ := result.RowsAffected()
 
-	
+	var correo string
+	var antelacion string
+
+	if notiNewValue.P_correo != nil {
+		correo = *notiNewValue.P_correo
+	} else {
+		correo = "Sin cambios"
+	}
+
+	if notiNewValue.P_antelacionNotis != nil {
+		antelacion = *notiNewValue.P_antelacionNotis
+	} else {
+		antelacion = "Sin cambios"
+	}
+
 	descripcion := "Configuración de notificaciones actualizada | Usuario ID: " +
 		strconv.Itoa(notiNewValue.P_idUsuario) +
-		" | Correo: " + notiNewValue.P_correo +
-		" | Antelación: " + strconv.Itoa(notiNewValue.P_antelacionNotis)
+		" | Correo: " + correo +
+		" | Antelación: " + antelacion
+
+	fmt.Println(descripcion)
 
 	insertarLog(
 		notiNewValue.P_idUsuario,
