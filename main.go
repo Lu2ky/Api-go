@@ -19,8 +19,8 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
-	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	//err := godotenv.Load() // Load enviorement variables
+	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	err := godotenv.Load() // Load enviorement variables
 
 	if err != nil {
 		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
