@@ -443,8 +443,14 @@ func changeusrpasswd(c *gin.Context) {
 	if err != nil {
 		log.Println("Error obteniendo usuario para log:", err)
 		userID = 0
-	}
-	insertarLog(userID, "CAMBIAR_CONTRASEÑA", "El usuario cambió su contraseña")
+
+		
+	descripcion := "Se cambió contraseña | ID: " +
+		strconv.Itoa(userID) +
+		" | Username: " + req.User
+
+	insertarLog(userID, "CAMBIAR_CONTRASEÑA", descripcion)
+
 	c.JSON(200, gin.H{"message": "Contraseña cambiada correctamente"})
 }
 
