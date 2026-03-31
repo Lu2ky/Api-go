@@ -443,8 +443,8 @@ func changeusrpasswd(c *gin.Context) {
 	if err != nil {
 		log.Println("Error obteniendo usuario para log:", err)
 		userID = 0
+	}
 
-		
 	descripcion := "Se cambió contraseña | ID: " +
 		strconv.Itoa(userID) +
 		" | Username: " + req.User
