@@ -130,6 +130,7 @@ func registerV1Routes(router gin.IRouter) {
 		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
 		protected.POST("/schedules/activities/times", getActivitiesTimesData)
 		protected.GET("/academic-periods", getAcademicPeriods)
+		protected.POST("/academic-periods/insert", addAcademicPeriod)
 
 		// Personal comments
 		protected.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
@@ -156,6 +157,7 @@ func registerV1Routes(router gin.IRouter) {
 		protected.POST("/reminders", addReminder)
 		protected.POST("/reminders/update", updateReminderById)
 		protected.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
+		protected.POST("/reminders/delete/multiple", deleteMultipleReminder)
 
 		// Notifications and emails
 		protected.GET("/notifications/users/:id", GetNotificaciones)

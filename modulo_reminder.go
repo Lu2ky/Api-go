@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 
@@ -314,6 +315,42 @@ func deleteOrRecoverReminder(c *gin.Context) {
 
 	descripcion := "Se eliminó/recuperó recordatorio ID: " +
 		strconv.Itoa(delReminder.N_idRecordatorio) +
+		" | Usuario: " + strconv.Itoa(userID)
+
+	insertarLog(userID, "DELETE_RECORDATORIO", descripcion)
+
+	rowsAffected, _ := result.RowsAffected()
+	c.JSON(200, gin.H{
+		"message":      "Comentario alterado correctamente",
+		"rowsAffected": rowsAffected,
+	})
+}
+
+func deleteMultipleReminder(c *gin.Context) {
+
+	var delReminder MultiDelReminder
+
+	err := c.BindJSON(&delReminder)
+
+	fmt.Printf("%v", delReminder)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	result, err := db.Exec("CALL eliminar_recordatorios_multiple(?)", delReminder.N_idRecordatorios)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	userID := delReminder.P_usuario
+
+	descripcion := "Se eliminaron los recordatorios de ID: " +
+		delReminder.N_idRecordatorios +
 		" | Usuario: " + strconv.Itoa(userID)
 
 	insertarLog(userID, "DELETE_RECORDATORIO", descripcion)
