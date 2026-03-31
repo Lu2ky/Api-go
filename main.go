@@ -116,6 +116,7 @@ func registerLegacyRoutes(router gin.IRoutes) {
 	// Token
 	router.POST("/receiveTokenData", receiveTokenData)
 	router.POST("/getToken", getToken)
+
 }
 
 func registerV1Routes(router gin.IRouter) {
@@ -178,6 +179,10 @@ func registerV1Routes(router gin.IRouter) {
 	// Tokens
 	router.POST("/tokens", receiveTokenData)
 	router.POST("/tokens/get", getToken)
+
+	// Paleta de colores
+	router.POST("/receivePaletteData", receivePaletteData)
+	router.POST("/getPalette", getPalette)
 }
 
 func method(c *gin.Context) {}

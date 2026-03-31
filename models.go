@@ -274,6 +274,11 @@ type Token struct {
 	Token  string `json:"token"`
 }
 
-type DeleteNotificacion struct {
+type DeleteNotification struct {
 	Ids string `json:"ids"`
+}
+
+type Palette struct {
+	UserId  string `json:"userId"`
+	Palette string `json:"palette"`
 }

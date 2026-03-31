@@ -121,3 +121,58 @@ func getToken(c *gin.Context) {
 
 	c.JSON(200, gin.H{"userId": req.UserId})
 }
+
+// Guardar paleta de colores en la base de datos
+func receivePaletteData(c *gin.Context) {
+	var data Palette
+
+	// Leer json
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "El formato del JSON es incorrecto o faltan campos",
+		})
+		return
+	}
+
+	// Guardar en Redis
+	err := rdb.Set(ctx, "palette:"+data.UserId, data.Palette, 0).Err()
+
+	if err != nil {
+		log.Printf("Error al guardar en Redis: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+	descripcion := "Se guardó paleta en Redis para usuario: " + data.UserId
+	insertarLog(0, "GUARDAR_PALETA", descripcion)
+
+	// Respuesta exitosa
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Paleta guardado correctamente en Redis",
+	})
+}
+
+// Obtener paleta de la base de datos
+func getPalette(c *gin.Context) {
+	var req Palette
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON mal formado"})
+		return
+	}
+
+	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
+
+	if err != nil {
+		fmt.Printf("Error de Redis: %v\n", err)
+		c.JSON(401, gin.H{"error": "Sesión no encontrada o expirada"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"userId":  req.UserId,
+		"palette": val,
+	})
+}

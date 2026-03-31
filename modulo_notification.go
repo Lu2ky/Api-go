@@ -107,7 +107,7 @@ func addNotificacion(c *gin.Context) {
 
 func deleteNotifications(c *gin.Context) {
 
-	var idsNotifications DeleteNotificacion
+	var idsNotifications DeleteNotification
 
 	//	Se asignan los valores el JSON a la estructura reminderNewValue
 	err := c.BindJSON(&idsNotifications)
