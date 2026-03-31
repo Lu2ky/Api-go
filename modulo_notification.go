@@ -168,11 +168,19 @@ func muteNotification(c *gin.Context) {
 	}
 
 	rowsAffected, _ := result.RowsAffected()
+
+	
+	descripcion := "Configuración de notificaciones actualizada | Usuario ID: " +
+		strconv.Itoa(notiNewValue.P_idUsuario) +
+		" | Correo: " + notiNewValue.P_correo +
+		" | Antelación: " + strconv.Itoa(notiNewValue.P_antelacionNotis)
+
 	insertarLog(
 		notiNewValue.P_idUsuario,
 		"CONFIGURAR_NOTIFICACIONES",
-		"El usuario modificó configuración de notificaciones",
+		descripcion,
 	)
+
 	if rowsAffected == 0 {
 		c.JSON(200, gin.H{"message": "No hubo cambios"})
 		return
