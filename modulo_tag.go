@@ -134,10 +134,11 @@ func deleteTag(c *gin.Context) {
 		return
 	}
 	
-	descripcion := "Se eliminó/recuperó etiqueta ID: " + strconv.Itoa(delTag.N_idEtiqueta)
+	descripcion := "Se eliminó/recuperó etiqueta | ID: " +
+		strconv.Itoa(delTag.N_idEtiqueta) +
+		" | Usuario ID: " + strconv.Itoa(delTag.P_usuario)
 
-insertarLog(delTag.P_usuario, "DELETE_ETIQUETA", descripcion)
-
+	insertarLog(delTag.P_usuario, "DELETE_ETIQUETA", descripcion)
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
