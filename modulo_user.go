@@ -227,7 +227,7 @@ func getOnboardingStatus(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"userId":     req.UserId,
-		"onboarding": val,
+		"userId": req.UserId,
+		"status": val,
 	})
 }
