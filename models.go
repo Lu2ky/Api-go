@@ -57,6 +57,12 @@ type AcademicPeriod struct {
 	Dt_fechaInicio       string `json:"fechaInicio"`
 	Dt_fechaFinal        string `json:"fechaFinal "`
 }
+type NewAcademicPeriod struct {
+	N_idUsuario    int    `json:"idUsuario"`
+	T_nombre       string `json:"nombre"`
+	Dt_fechaInicio string `json:"fechaInicio"`
+	Dt_fechaFinal  string `json:"fechaFinal"`
+}
 
 type OfficialSchedule struct {
 	N_idHorario            int             `json:"N_idHorario"`
@@ -208,7 +214,10 @@ type DelReminder struct {
 	N_idRecordatorio int `json:"N_idRecordatorio"`
 	P_usuario        int `json:"P_usuario"`
 }
-
+type MultiDelReminder struct {
+	N_idRecordatorios string `json:"N_idRecordatorios"`
+	P_usuario         int    `json:"P_usuario"`
+}
 type TipoCurso struct {
 	N_idTipoCurso int    `json:"N_idTipoCurso"`
 	T_nombre      string `json:"T_nombre"`

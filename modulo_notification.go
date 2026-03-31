@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -168,11 +170,35 @@ func muteNotification(c *gin.Context) {
 	}
 
 	rowsAffected, _ := result.RowsAffected()
+
+	var correo string
+	var antelacion string
+
+	if notiNewValue.P_correo != nil {
+		correo = *notiNewValue.P_correo
+	} else {
+		correo = "Sin cambios"
+	}
+
+	if notiNewValue.P_antelacionNotis != nil {
+		antelacion = *notiNewValue.P_antelacionNotis
+	} else {
+		antelacion = "Sin cambios"
+	}
+
+	descripcion := "Configuración de notificaciones actualizada | Usuario ID: " +
+		strconv.Itoa(notiNewValue.P_idUsuario) +
+		" | Correo: " + correo +
+		" | Antelación: " + antelacion
+
+	fmt.Println(descripcion)
+
 	insertarLog(
 		notiNewValue.P_idUsuario,
 		"CONFIGURAR_NOTIFICACIONES",
-		"El usuario modificó configuración de notificaciones",
+		descripcion,
 	)
+
 	if rowsAffected == 0 {
 		c.JSON(200, gin.H{"message": "No hubo cambios"})
 		return
