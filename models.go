@@ -282,3 +282,8 @@ type Palette struct {
 	UserId  string `json:"userId"`
 	Palette string `json:"palette"`
 }
+
+type Onboarding struct {
+	UserId string `json:"userId"`
+	Status string `json:"status"`
+}
