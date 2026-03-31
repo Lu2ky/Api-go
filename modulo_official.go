@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -225,4 +227,50 @@ func getAcademicPeriods(c *gin.Context) {
 
 	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
 	c.JSON(200, ofcschedules)
+}
+
+func addAcademicPeriod(c *gin.Context) {
+	var newAcademicPeriodValue NewAcademicPeriod
+
+	err := c.BindJSON(&newAcademicPeriodValue)
+
+	fmt.Printf("%v", newAcademicPeriodValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"Error": "Formato invalido de json"})
+		return
+
+	}
+
+	result, err := db.Exec("CALL agregarPeriodo(?, ?, ?);",
+		newAcademicPeriodValue.T_nombre,
+		newAcademicPeriodValue.Dt_fechaInicio,
+		newAcademicPeriodValue.Dt_fechaFinal,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "No se encuentra el archivo a importar"})
+		return
+
+	}
+
+	descripcion := "Se agregó un nuevo periodo académico: " +
+		" | Nombre: " + newAcademicPeriodValue.T_nombre +
+		" | Fecha inicial: " + newAcademicPeriodValue.Dt_fechaInicio +
+		" | Fecha final: " + newAcademicPeriodValue.Dt_fechaFinal +
+		" | Usuario: " + strconv.Itoa(newAcademicPeriodValue.N_idUsuario)
+
+	insertarLog(newAcademicPeriodValue.N_idUsuario, "AGREGAR PERIODO ACADEMICO", descripcion)
+	c.JSON(200, gin.H{
+		"message": "Horario importado correctamente",
+	})
+
 }
