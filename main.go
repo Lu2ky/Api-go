@@ -160,7 +160,7 @@ func registerV1Routes(router gin.IRouter) {
 		// Notifications and emails
 		protected.GET("/notifications/users/:id", GetNotificaciones)
 		protected.POST("/notifications", addNotificacion)
-		protected.POST("/deleteNotifications", deleteNotifications)
+		protected.POST("/notifications/delete", deleteNotifications)
 		protected.POST("/emails", addCorreo)
 
 		// Schedule import
@@ -181,8 +181,8 @@ func registerV1Routes(router gin.IRouter) {
 	router.POST("/tokens/get", getToken)
 
 	// Paleta de colores
-	router.POST("/receivePaletteData", receivePaletteData)
-	router.POST("/getPalette", getPalette)
+	router.POST("/palette", receivePaletteData)
+	router.POST("/palette/get", getPalette)
 }
 
 func method(c *gin.Context) {}
