@@ -106,7 +106,7 @@ func addNotificacion(c *gin.Context) {
 		descripcion,
 	)
 
-}
+} 
 
 func deleteNotifications(c *gin.Context) {
 
