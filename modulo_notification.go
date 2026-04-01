@@ -95,17 +95,14 @@ func addNotificacion(c *gin.Context) {
 	}
 	insertedID, _ := result.LastInsertId()
 
-	descripcion := "Se creó notificación | ID: " +
-		strconv.FormatInt(insertedID, 10) +
-		" | Usuario ID: " + strconv.Itoa(notiNewValue.N_idUsuario) +
-		" | Nombre: " + notiNewValue.T_nombre
+	userID := getUserIDFromJWT(c)
 
-	insertarLog(
-		notiNewValue.N_idUsuario,
-		"CREAR_NOTIFICACION",
-		descripcion,
-	)
+descripcion := "Se creó notificación | ID: " +
+	strconv.FormatInt(insertedID, 10) +
+	" | Usuario ID: " + strconv.Itoa(userID) +
+	" | Nombre: " + notiNewValue.T_nombre
 
+insertarLog(userID, "CREAR_NOTIFICACION", descripcion)
 	c.JSON(200, gin.H{
 		"message": "Notificacion creada correctamente",
 	})
