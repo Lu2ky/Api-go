@@ -198,6 +198,7 @@ type ReminderNewValue struct {
 	P_tag5        *string `json:"P_tag5"`
 }
 type EditReminder struct {
+	P_usuario     int    `json:"P_usuario"`
 	P_idToDo      int     `json:"P_idToDo"`
 	P_nombre      *string `json:"P_nombre"`
 	P_descripcion *string `json:"P_descripcion"`
