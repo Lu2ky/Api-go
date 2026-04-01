@@ -104,7 +104,7 @@ func addNotificacion(c *gin.Context) {
 		notiNewValue.N_idUsuario,
 		"CREAR_NOTIFICACION",
 		descripcion,
-	})
+	)
 
 }
 
