@@ -93,15 +93,19 @@ func addNotificacion(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Reminder not found"})
 		return
 	}
-	//insertedID, _ := result.LastInsertId()
+	insertedID, _ := result.LastInsertId()
 
-	//descripcion := "Se creó una notificación con id: " + strconv.FormatInt(insertedID, 10)
+	descripcion := "Se creó notificación | ID: " +
+		strconv.FormatInt(insertedID, 10) +
+		" | Usuario ID: " + strconv.Itoa(notiNewValue.N_idUsuario) +
+		" | Nombre: " + notiNewValue.T_nombre
 
-	// insertarLog(
-	//	notiNewValue.N_idUsuario,
-	//	"CREAR_NOTIFICACION",
-	//	descripcion,
-	// )
+	insertarLog(
+		notiNewValue.N_idUsuario,
+		"CREAR_NOTIFICACION",
+		descripcion,
+	)
+
 	c.JSON(200, gin.H{
 		"message": "Notificacion creada correctamente",
 	})
