@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
+ 
 //	------------------------ NOTIFICACIONES Y CORREO  ------------------------ //
 
 func GetNotificaciones(c *gin.Context) {
