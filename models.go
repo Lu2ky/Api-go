@@ -237,17 +237,20 @@ type NewNotificacion struct {
 	T_descripcion   string `json:"descripcion"`
 	Dt_fechaEmision string `json:"fechaEmision"`
 	N_idToDoList    int    `json:"idToDoList"`
+	N_idUsuario     int     `json:"N_idUsuario"`
 }
 type MuteNotification struct {
 	P_idUsuario       int     `json:"idUsuario"`
 	P_correo          *string `json:"correo"`
 	P_antelacionNotis *string `json:"antelacionNotis"`
+	N_idUsuario     int     `json:"N_idUsuario"`
 }
 type NewCorreo struct {
 	T_asunto        string `json:"asunto"`
 	T_contenido     string `json:"contenido"`
 	Dt_fechaEmision string `json:"fechaEmision"`
 	N_idToDoList    int    `json:"idToDoList"`
+	N_idUsuario     int     `json:"N_idUsuario"`
 }
 type UserData struct {
 	N_idUsuario        int     `json:"idUsuario"`
@@ -285,6 +288,7 @@ type Token struct {
 
 type DeleteNotification struct {
 	Ids string `json:"ids"`
+	N_idUsuario     int     `json:"N_idUsuario"`
 }
 
 type Palette struct {
