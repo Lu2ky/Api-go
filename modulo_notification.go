@@ -74,11 +74,12 @@ func addNotificacion(c *gin.Context) {
 	}
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("INSERT INTO Notificaciones (T_nombre, T_descripcion, Dt_fechaEmision, N_idToDoList) VALUES(?, ?, ?, ?)",
+	result, err := db.Exec("INSERT INTO Notificaciones (T_nombre, T_descripcion, Dt_fechaEmision, N_idToDoList, N_idUsuario)  VALUES (?, ?, ?, ?, ?)",
 		notiNewValue.T_nombre,
 		notiNewValue.T_descripcion,
 		notiNewValue.Dt_fechaEmision,
 		notiNewValue.N_idToDoList,
+		notiNewValue.N_idUsuario,
 	)
 
 	if err != nil {
