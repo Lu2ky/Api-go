@@ -56,6 +56,7 @@ type AcademicPeriod struct {
 	T_nombre             string `json:"nombre"`
 	Dt_fechaInicio       string `json:"fechaInicio"`
 	Dt_fechaFinal        string `json:"fechaFinal "`
+	B_isDeleted          int    `json:"isDeleted "`
 }
 type NewAcademicPeriod struct {
 	N_idUsuario    int    `json:"idUsuario"`
