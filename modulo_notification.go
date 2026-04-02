@@ -106,6 +106,11 @@ func addNotificacion(c *gin.Context) {
 		descripcion,
 	)
 
+	c.JSON(200, gin.H{
+    "message": "Notificación creada correctamente",
+    "id": insertedID,
+})
+
 } 
 
 func deleteNotifications(c *gin.Context) {
