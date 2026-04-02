@@ -142,9 +142,16 @@ func deleteNotifications(c *gin.Context) {
 		return
 	}
 
-	//descripcion := "Se actualizó elimaron los recordatorios con IDs: " + strconv.Itoa(ids.Ids)
+descripcion := "Notificaciones eliminadas | IDs: " +
+		idsNotifications.Ids +
+		" | Usuario ID: " + strconv.Itoa(idsNotifications.N_idUsuario)
 
-	//insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+	insertarLog(
+		idsNotifications.N_idUsuario,
+		"ELIMINAR_NOTIFICACIONES",
+		descripcion,
+	)
+
 	c.JSON(200, gin.H{
 		"message": "Notificaciones eliminadas correctamente",
 	})
