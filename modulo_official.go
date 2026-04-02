@@ -206,6 +206,7 @@ func getAcademicPeriods(c *gin.Context) {
 			&ofcschedule.T_nombre,
 			&ofcschedule.Dt_fechaInicio,
 			&ofcschedule.Dt_fechaFinal,
+			&ofcshedule.B_isDeleted,
 		)
 		if err != nil {
 			log.Printf("Scan error: %v", err)
