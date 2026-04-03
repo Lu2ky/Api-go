@@ -256,6 +256,8 @@ func addCorreo(c *gin.Context) {
 		return
 	}
 
+	insertedID, _ := result.LastInsertId()
+
 	
 	descripcion := "Correo creado | ID: " +
 		strconv.FormatInt(insertedID, 10) +
