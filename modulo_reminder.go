@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
+ 
 //	--------------- Recordatorios ----------------------------------------
 //
 // Obtener la lista de los recordatorios
@@ -284,9 +284,12 @@ func updateReminderById(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Personal schedule not found"})
 		return
 	}
-	descripcion := "Se actualizó recordatorio ID: " + strconv.Itoa(reminderNewValue.P_idToDo)
+descripcion := "Se actualizó recordatorio ID: " +
+	strconv.Itoa(reminderNewValue.P_idToDo) +
+	" | Usuario: " + strconv.Itoa(reminderNewValue.P_usuario)
 
-	insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+	insertarLog(reminderNewValue.P_usuario, "UPDATE_RECORDATORIO", descripcion)
+
 	c.JSON(200, gin.H{
 		"message": "Recordatorio creado correctamente",
 	})
@@ -304,6 +307,18 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
+	var userID int
+	err = db.QueryRow(
+		"SELECT N_idUsuario FROM Recordatorio WHERE N_idRecordatorio = ?",
+		delReminder.N_idRecordatorio,
+		).Scan(&userID)
+
+		if err != nil {
+		log.Printf("Error obteniendo usuario: %v", err)
+		c.JSON(500, gin.H{"error": "Error obteniendo usuario"})
+		return
+	}
+
 	result, err := db.Exec("CALL eliminar_recordatorio(?)", delReminder.N_idRecordatorio)
 	if err != nil {
 		log.Printf("Database error: %v", err)
@@ -311,7 +326,7 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
-	userID := delReminder.P_usuario
+
 
 	descripcion := "Se eliminó/recuperó recordatorio ID: " +
 		strconv.Itoa(delReminder.N_idRecordatorio) +

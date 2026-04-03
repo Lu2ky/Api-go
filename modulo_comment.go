@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-
+	"strconv"
 	"github.com/gin-gonic/gin"
 )
 
@@ -99,21 +99,31 @@ func addPersonalComment(c *gin.Context) {
 		"INSERT INTO Comentarios (N_idHorario, T_Comentario) VALUES (?, ?)",
 		newComment.N_idHorario,
 		newComment.T_comentario,
+		
 	)
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	//insertedID, _ := result.LastInsertId()
+	insertedID, err := result.LastInsertId()
+	if err != nil {
+		log.Printf("LastInsertId error: %v", err)
+	}
 
-	//descripcion := "El id del comentario ingresado fue: " + strconv.FormatInt(insertedID, 10)
+	
+	descripcion := "Comentario creado | ID: " +
+	strconv.FormatInt(insertedID, 10) +
+	" | Horario: " + strconv.Itoa(newComment.N_idHorario)
 
-	//insertarLog(
-	//	newComment.N_idUsuario,
-	//	"INSERTAR_COMENTARIO",
-	//	descripcion,
-	//)
+func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Println("panic en insertarLog:", r)
+			}
+		}()
+		insertarLog(0, "CREAR_COMENTARIO", descripcion)
+	}()
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
@@ -145,13 +155,17 @@ func updatePersonalComment(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	//descripcion := "Se actualizó el comentario con id: " + strconv.Itoa(newComment.N_idComentarios)
+	
+	descripcion := "Comentario actualizado | ID: " +
+		strconv.Itoa(newComment.N_idComentarios) +
+		" | Usuario ID: " + strconv.Itoa(newComment.N_idUsuario)
 
-	//	insertarLog(
-	//		newComment.N_idUsuario,
-	//		"ACTUALIZAR_COMENTARIO",
-	//		descripcion,
-	//	)
+	insertarLog(
+		newComment.N_idUsuario,
+		"ACTUALIZAR_COMENTARIO",
+		descripcion,
+	)
+
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario editado correctamente",
@@ -181,12 +195,15 @@ func deletePersonalComment(c *gin.Context) {
 		return
 	}
 
-	//insertarLog(
-	//	delComment.N_idUsuario,
-	// 	"ELIMINAR_COMENTARIO",
-	//	descripcion,
-	//  )
+	descripcion := "Comentario eliminado | ID: " +
+		strconv.Itoa(delComment.N_idComentarios) +
+		" | Usuario ID: " + strconv.Itoa(delComment.N_idUsuario)
 
+	insertarLog(
+		delComment.N_idUsuario,
+		"ELIMINAR_COMENTARIO",
+		descripcion,
+	)
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",

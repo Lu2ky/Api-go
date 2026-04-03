@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -125,9 +125,16 @@ func receiveTokenData(c *gin.Context) {
 		})
 		return
 	}
-	descripcion := "Se guardó token en Redis para usuario: " + data.UserId
-	insertarLog(0, "GUARDAR_TOKEN", descripcion)
 
+	userID, err := strconv.Atoi(data.UserId)
+	
+	descripcion := "Token guardado en Redis | Usuario: " + data.UserId
+
+insertarLog(
+	userID,
+	"GUARDAR_TOKEN",
+	descripcion,
+)
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
@@ -182,8 +189,15 @@ func receivePaletteData(c *gin.Context) {
 		})
 		return
 	}
-	descripcion := "Se guardó paleta en Redis para usuario: " + data.UserId
-	insertarLog(0, "GUARDAR_PALETA", descripcion)
+	userID, err := strconv.Atoi(data.UserId)
+	
+	descripcion := "Paleta guardada en Redis | Usuario ID: " + data.UserId
+
+	insertarLog(
+		userID,
+		"GUARDAR_PALETA",
+		descripcion,
+	)
 
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
@@ -237,8 +251,17 @@ func receiveOnboardingStatus(c *gin.Context) {
 		})
 		return
 	}
-	descripcion := "Se guardó el registro en Redis para usuario: " + data.UserId
-	insertarLog(0, "GUARDAR_REGISTRO_TUTORIAL", descripcion)
+
+	userID, err := strconv.Atoi(data.UserId)
+	
+	descripcion := "Onboarding actualizado en Redis | Usuario ID: " + data.UserId +
+		" | Estado: " + data.Status
+
+	insertarLog(
+		userID,
+		"GUARDAR_ONBOARDING",
+		descripcion,
+	)
 
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
