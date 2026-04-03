@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
+ 
 //	--------------- Recordatorios ----------------------------------------
 //
 // Obtener la lista de los recordatorios
