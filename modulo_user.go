@@ -87,9 +87,13 @@ func receiveTokenData(c *gin.Context) {
 		})
 		return
 	}
-	descripcion := "Se guardó token en Redis para usuario: " + data.UserId
-	insertarLog(0, "GUARDAR_TOKEN", descripcion)
+	descripcion := "Token guardado en Redis | Usuario: " + data.UserId
 
+	insertarLog(
+		0, 
+		"GUARDAR_TOKEN",
+		descripcion,
+	)
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
