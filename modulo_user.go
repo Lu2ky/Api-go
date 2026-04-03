@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -148,8 +148,15 @@ func receivePaletteData(c *gin.Context) {
 		})
 		return
 	}
-	descripcion := "Se guardó paleta en Redis para usuario: " + data.UserId
-	insertarLog(0, "GUARDAR_PALETA", descripcion)
+	userID, err := strconv.Atoi(data.UserId)
+	
+	descripcion := "Paleta guardada en Redis | Usuario ID: " + data.UserId
+
+	insertarLog(
+		userID,
+		"GUARDAR_PALETA",
+		descripcion,
+	)
 
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
