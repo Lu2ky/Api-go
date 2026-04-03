@@ -113,13 +113,17 @@ func addPersonalComment(c *gin.Context) {
 
 	
 	descripcion := "Comentario creado | ID: " +
-	strconv.FormatInt(insertedID, 10)
+	strconv.FormatInt(insertedID, 10) +
+	" | Horario: " + strconv.Itoa(newComment.N_idHorario)
 
-insertarLog(
-	0,
-	"CREAR_COMENTARIO",
-	descripcion,
-)
+func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Println("panic en insertarLog:", r)
+			}
+		}()
+		insertarLog(0, "CREAR_COMENTARIO", descripcion)
+	}()
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
