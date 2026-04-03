@@ -328,12 +328,6 @@ func deleteOrRecoverReminder(c *gin.Context) {
 	insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
 
 
-	descripcion := "Se eliminó/recuperó recordatorio ID: " +
-		strconv.Itoa(delReminder.N_idRecordatorio) +
-		" | Usuario: " + strconv.Itoa(userID)
-
-	insertarLog(userID, "DELETE_RECORDATORIO", descripcion)
-
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",
