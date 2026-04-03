@@ -152,13 +152,17 @@ func updatePersonalComment(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	//descripcion := "Se actualizó el comentario con id: " + strconv.Itoa(newComment.N_idComentarios)
+	
+	descripcion := "Comentario actualizado | ID: " +
+		strconv.Itoa(newComment.N_idComentarios) +
+		" | Usuario ID: " + strconv.Itoa(newComment.N_idUsuario)
 
-	//	insertarLog(
-	//		newComment.N_idUsuario,
-	//		"ACTUALIZAR_COMENTARIO",
-	//		descripcion,
-	//	)
+	insertarLog(
+		newComment.N_idUsuario,
+		"ACTUALIZAR_COMENTARIO",
+		descripcion,
+	)
+
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario editado correctamente",
