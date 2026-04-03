@@ -19,8 +19,8 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
-	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	//err := godotenv.Load() // Load enviorement variables
+	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	err := godotenv.Load() // Load enviorement variables
 
 	if err != nil {
 		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
@@ -58,9 +58,9 @@ func main() {
 	v1 := router.Group("/api/v1")
 	registerV1Routes(v1)
 
-	//router.Run("0.0.0.0:8080") // The port number for expone the API
+	router.Run("0.0.0.0:8080") // The port number for expone the API
 
-	router.Run(":8080")
+	//router.Run(":8080")
 }
 
 func registerLegacyRoutes(router gin.IRoutes) {
@@ -121,66 +121,66 @@ func registerLegacyRoutes(router gin.IRoutes) {
 
 func registerV1Routes(router gin.IRouter) {
 
-	//autho := JWTManager{Secret: []byte(os.Getenv("JWT_SECRET"))}
-
+	autho := JWTManager{Secret: []byte(os.Getenv("JWT_SECRET"))}
 	protected := router.Group("/")
-	//protected.Use(autho.AuthMiddleware())
+	protected.Use(autho.AuthMiddleware())
 	{
 		// Official schedules
 		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
-		protected.POST("/schedules/activities/times", getActivitiesTimesData)
-		protected.GET("/academic-periods", getAcademicPeriods)
-		protected.POST("/academic-periods/insert", addAcademicPeriod)
-		protected.POST("/academic-periods/update", updateAcademicPeriod)
-		protected.POST("/academic-periods/delete", deleteAcademicPeriod)
-		// Personal comments
-		protected.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
-		protected.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
-		protected.POST("/comments/personal", addPersonalComment)
-		protected.POST("/comments/personal/update", updatePersonalComment)
-		protected.POST("/comments/personal/delete", deletePersonalComment)
-
-		// Personal schedules
-		protected.GET("/schedules/personal/users/:id", getPersonalScheduleByUserId)
-		protected.POST("/schedules/personal", addPersonalActivity)
-		protected.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
-		protected.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
-		protected.GET("/course-types", GetTiposCurso)
-
-		// Tags
-		protected.GET("/tags/users/:id", GetTagsByUserId)
-		protected.GET("/tags/users/:id/reminders/:reminderId", GetTagsByUserIdAndReminderId)
-		protected.POST("/tags/delete", deleteTag)
-
-		// Reminders
-		protected.GET("/reminders/users/:id", GetRemindersByUserId)
-		protected.GET("/reminders/users/:id/tags", GetRemindersTagsByUserId)
-		protected.POST("/reminders", addReminder)
-		protected.POST("/reminders/update", updateReminderById)
-		protected.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
-		protected.POST("/reminders/delete/multiple", deleteMultipleReminder)
-
-		// Notifications and emails
-		protected.GET("/notifications/users/:id", GetNotificaciones)
-		protected.POST("/notifications", addNotificacion)
-		protected.POST("/notifications/delete", deleteNotifications)
-		protected.POST("/emails", addCorreo)
-
-		// Schedule import
-		protected.POST("/schedules/import", importSchedule)
-
-		// User configuration
-		protected.GET("/users/:id", GetUserInfo)
-		protected.POST("/notifications/mute", muteNotification)
-
-		// Paleta de colores
-		router.POST("/palette", receivePaletteData)
-		router.POST("/palette/get", getPalette)
-
-		// Registro de incorporación
-		router.POST("/onboarding", receiveOnboardingStatus)
-		router.POST("/onboarding/get", getOnboardingStatus)
 	}
+	router.POST("/schedules/activities/times", getActivitiesTimesData)
+	router.GET("/academic-periods", getAcademicPeriods)
+	router.POST("/academic-periods/insert", addAcademicPeriod)
+	router.POST("/academic-periods/update", updateAcademicPeriod)
+	router.POST("/academic-periods/delete", deleteAcademicPeriod)
+	// Personal comments
+	router.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
+	router.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
+	router.POST("/comments/personal", addPersonalComment)
+	router.POST("/comments/personal/update", updatePersonalComment)
+	router.POST("/comments/personal/delete", deletePersonalComment)
+
+	// Personal schedules
+	router.GET("/schedules/personal/users/:id", getPersonalScheduleByUserId)
+	router.POST("/schedules/personal", addPersonalActivity)
+	router.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
+	router.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
+	router.GET("/course-types", GetTiposCurso)
+
+	// Tags
+	router.GET("/tags/users/:id", GetTagsByUserId)
+	router.GET("/tags/users/:id/reminders/:reminderId", GetTagsByUserIdAndReminderId)
+	router.POST("/tags/delete", deleteTag)
+
+	// Reminders
+	router.GET("/reminders/users/:id", GetRemindersByUserId)
+	router.GET("/reminders/users/:id/tags", GetRemindersTagsByUserId)
+	router.POST("/reminders", addReminder)
+	router.POST("/reminders/update", updateReminderById)
+	router.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
+	router.POST("/reminders/delete/multiple", deleteMultipleReminder)
+
+	// Notifications and emails
+	router.GET("/notifications/users/:id", GetNotificaciones)
+	router.POST("/notifications", addNotificacion)
+	router.POST("/notifications/delete", deleteNotifications)
+	router.POST("/emails", addCorreo)
+
+	// Schedule import
+	router.POST("/schedules/import", importSchedule)
+
+	// User configuration
+	router.GET("/users/:id", GetUserInfo)
+	router.POST("/notifications/mute", muteNotification)
+
+	// Paleta de colores
+	router.POST("/palette", receivePaletteData)
+	router.POST("/palette/get", getPalette)
+
+	// Registro de incorporación
+	router.POST("/onboarding", receiveOnboardingStatus)
+	router.POST("/onboarding/get", getOnboardingStatus)
+
 	// LDAP/auth
 	router.POST("/auth/login", Auth)
 	router.POST("/auth/users", createUser)
