@@ -105,8 +105,9 @@ type Tags struct {
 	B_isDeleted      *sql.NullBool `json:"B_isDeleted"`
 }
 type DelTag struct {
-	N_idEtiqueta int `json:"N_idEtiqueta"`
-	P_usuario    int `json:"P_usuario"`
+	N_idEtiqueta int     `json:"N_idEtiqueta"`
+	P_usuario    int     `json:"P_usuario"`
+	CodUsuario   *string `json:"codUsuario"`
 }
 type PersonalScheduleNewValue struct {
 	NewActivityValue   string `json:"NewActivityValue" binding:"required"`
@@ -242,6 +243,7 @@ type MuteNotification struct {
 	P_idUsuario       int     `json:"idUsuario"`
 	P_correo          *string `json:"correo"`
 	P_antelacionNotis *string `json:"antelacionNotis"`
+	CodUsuario        *string `json:"codUsuario"`
 }
 type NewCorreo struct {
 	T_asunto        string `json:"asunto"`

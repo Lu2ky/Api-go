@@ -156,6 +156,18 @@ func muteNotification(c *gin.Context) {
 		return
 	}
 
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "UserInfo:"+*notiNewValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegsitro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo es encontró registro relacionado")
+	}
+
 	//	Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL configuracion_notificaciones(?, ?, ?);",
 		notiNewValue.P_idUsuario,
@@ -186,7 +198,7 @@ func muteNotification(c *gin.Context) {
 		antelacion = "Sin cambios"
 	}
 
-	descripcion := "Configuración de notificaciones actualizada | Usuario ID: " +
+	descripcion := "\nConfiguración de notificaciones actualizada | Usuario ID: " +
 		strconv.Itoa(notiNewValue.P_idUsuario) +
 		" | Correo: " + correo +
 		" | Antelación: " + antelacion
@@ -207,6 +219,7 @@ func muteNotification(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Preferencias actualizadas",
 	})
+
 }
 
 func addCorreo(c *gin.Context) {

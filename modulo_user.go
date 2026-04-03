@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,7 +17,26 @@ func GetUserInfo(c *gin.Context) {
 
 	id_user := c.Param("id")
 
-	//	Consulta
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "UserInfo:"+id_user).Result()
+
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var userDataArray []UserData
+
+		err := json.Unmarshal([]byte(val), &userDataArray)
+
+		if err == nil {
+			c.JSON(200, userDataArray)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
+
 	rows, err := db.Query(
 		`
 		SELECT u.N_idUsuario, u.T_nombre, u.T_correo, u.N_semestreActual, u.T_programa, u.TM_antelacionNotis, u.N_celular
@@ -61,6 +81,24 @@ func GetUserInfo(c *gin.Context) {
 		return
 	}
 
+	// Convertir a formato apto para redis
+	data, err := json.Marshal(userDataArray)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error al serializar datos"})
+		return
+	}
+	// Guardar datos en redis
+	err2 := rdb.Set(ctx, "UserInfo:"+id_user, data, 8*time.Hour).Err()
+
+	if err2 != nil {
+		log.Printf("Error al guardar en Redis: %v", err2)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+
+	// Devuelve la consulta de la base relacional
 	c.JSON(200, userDataArray)
 
 }
