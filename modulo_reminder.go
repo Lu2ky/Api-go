@@ -307,25 +307,25 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
-	var userID int
-	err = db.QueryRow(
-		"SELECT N_idUsuario FROM Recordatorio WHERE N_idRecordatorio = ?",
-		delReminder.N_idRecordatorio,
-		).Scan(&userID)
-
-		if err != nil {
-		log.Printf("Error obteniendo usuario: %v", err)
-		c.JSON(500, gin.H{"error": "Error obteniendo usuario"})
+	if delReminder.P_usuario == 0 {
+		c.JSON(400, gin.H{"error": "usuario requerido"})
 		return
 	}
 
+	
 	result, err := db.Exec("CALL eliminar_recordatorio(?)", delReminder.N_idRecordatorio)
 	if err != nil {
-		log.Printf("Database error: %v", err)
+		log.Printf(" Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
 
+	
+	descripcion := "Se eliminó/recuperó recordatorio ID: " +
+		strconv.Itoa(delReminder.N_idRecordatorio) +
+		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
+
+	insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
 
 
 	descripcion := "Se eliminó/recuperó recordatorio ID: " +
