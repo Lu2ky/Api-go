@@ -125,6 +125,9 @@ func deleteNotifications(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("userID")
+
+
 	result, err := db.Exec("CALL leer_noti(?)",
 		idsNotifications.Ids,
 	)
@@ -144,13 +147,9 @@ func deleteNotifications(c *gin.Context) {
 
 descripcion := "Notificaciones eliminadas | IDs: " +
 		idsNotifications.Ids +
-		" | Usuario ID: " + strconv.Itoa(idsNotifications.N_idUsuario)
+		" | Usuario ID: " + strconv.Itoa(userID)
 
-	insertarLog(
-		idsNotifications.N_idUsuario,
-		"ELIMINAR_NOTIFICACIONES",
-		descripcion,
-	)
+	insertarLog(userID, "ELIMINAR_NOTIFICACIONES", descripcion)
 
 	c.JSON(200, gin.H{
 		"message": "Notificaciones eliminadas correctamente",
