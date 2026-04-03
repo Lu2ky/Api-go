@@ -172,6 +172,14 @@ func registerV1Routes(router gin.IRouter) {
 		// User configuration
 		protected.GET("/users/:id", GetUserInfo)
 		protected.POST("/notifications/mute", muteNotification)
+
+		// Paleta de colores
+		router.POST("/palette", receivePaletteData)
+		router.POST("/palette/get", getPalette)
+
+		// Registro de incorporación
+		router.POST("/onboarding", receiveOnboardingStatus)
+		router.POST("/onboarding/get", getOnboardingStatus)
 	}
 	// LDAP/auth
 	router.POST("/auth/login", Auth)
@@ -183,9 +191,6 @@ func registerV1Routes(router gin.IRouter) {
 	router.POST("/tokens", receiveTokenData)
 	router.POST("/tokens/get", getToken)
 
-	// Paleta de colores
-	router.POST("/palette", receivePaletteData)
-	router.POST("/palette/get", getPalette)
 }
 
 func method(c *gin.Context) {}

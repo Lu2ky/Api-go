@@ -184,7 +184,7 @@ func getAcademicPeriods(c *gin.Context) {
 
 		El operador := lo que hace es definir una variable e inferir su tipo automáticamente.
 	*/
-	rows, err := db.Query(`SELECT N_idPeriodoAcademico, T_nombre, Dt_fechaInicio, Dt_fechaFinal FROM PeriodoAcademico;`)
+	rows, err := db.Query(`SELECT * FROM PeriodoAcademico;`)
 
 	//	si err != nil entonces significa que hay un error.
 	//	nil es similar a null. Entonces si el error es nulo significa que no hay errores.
@@ -206,6 +206,7 @@ func getAcademicPeriods(c *gin.Context) {
 			&ofcschedule.T_nombre,
 			&ofcschedule.Dt_fechaInicio,
 			&ofcschedule.Dt_fechaFinal,
+			&ofcschedule.B_isDeleted,
 		)
 		if err != nil {
 			log.Printf("Scan error: %v", err)

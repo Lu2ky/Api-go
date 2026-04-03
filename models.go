@@ -56,6 +56,7 @@ type AcademicPeriod struct {
 	T_nombre             string `json:"nombre"`
 	Dt_fechaInicio       string `json:"fechaInicio"`
 	Dt_fechaFinal        string `json:"fechaFinal "`
+	B_isDeleted          int    `json:"isDeleted "`
 }
 type NewAcademicPeriod struct {
 	N_idUsuario    int    `json:"idUsuario"`
@@ -209,6 +210,7 @@ type ReminderNewValue struct {
 	P_tag5        *string `json:"P_tag5"`
 }
 type EditReminder struct {
+	P_usuario     int    `json:"P_usuario"`
 	P_idToDo      int     `json:"P_idToDo"`
 	P_nombre      *string `json:"P_nombre"`
 	P_descripcion *string `json:"P_descripcion"`
@@ -248,17 +250,20 @@ type NewNotificacion struct {
 	T_descripcion   string `json:"descripcion"`
 	Dt_fechaEmision string `json:"fechaEmision"`
 	N_idToDoList    int    `json:"idToDoList"`
+	N_idUsuario     int     `json:"N_idUsuario"`
 }
 type MuteNotification struct {
 	P_idUsuario       int     `json:"idUsuario"`
 	P_correo          *string `json:"correo"`
 	P_antelacionNotis *string `json:"antelacionNotis"`
+	N_idUsuario     int     `json:"N_idUsuario"`
 }
 type NewCorreo struct {
 	T_asunto        string `json:"asunto"`
 	T_contenido     string `json:"contenido"`
 	Dt_fechaEmision string `json:"fechaEmision"`
 	N_idToDoList    int    `json:"idToDoList"`
+	N_idUsuario     int     `json:"N_idUsuario"`
 }
 type UserData struct {
 	N_idUsuario        int     `json:"idUsuario"`
@@ -296,9 +301,15 @@ type Token struct {
 
 type DeleteNotification struct {
 	Ids string `json:"ids"`
+	N_idUsuario     int     `json:"N_idUsuario"`
 }
 
 type Palette struct {
 	UserId  string `json:"userId"`
 	Palette string `json:"palette"`
+}
+
+type Onboarding struct {
+	UserId string `json:"userId"`
+	Status string `json:"status"`
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
+  
 //	------------------------ NOTIFICACIONES Y CORREO  ------------------------ //
 
 func GetNotificaciones(c *gin.Context) {
@@ -74,11 +74,12 @@ func addNotificacion(c *gin.Context) {
 	}
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("INSERT INTO Notificaciones (T_nombre, T_descripcion, Dt_fechaEmision, N_idToDoList) VALUES(?, ?, ?, ?)",
+	result, err := db.Exec("INSERT INTO Notificaciones (T_nombre, T_descripcion, Dt_fechaEmision, N_idToDoList, N_idUsuario)  VALUES (?, ?, ?, ?, ?)",
 		notiNewValue.T_nombre,
 		notiNewValue.T_descripcion,
 		notiNewValue.Dt_fechaEmision,
 		notiNewValue.N_idToDoList,
+		notiNewValue.N_idUsuario,
 	)
 
 	if err != nil {
@@ -93,19 +94,25 @@ func addNotificacion(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Reminder not found"})
 		return
 	}
-	//insertedID, _ := result.LastInsertId()
+	insertedID, _ := result.LastInsertId()
 
-	//descripcion := "Se creó una notificación con id: " + strconv.FormatInt(insertedID, 10)
+	descripcion := "Se creó notificación | ID: " +
+		strconv.FormatInt(insertedID, 10) +
+		" | Usuario ID: " + strconv.Itoa(notiNewValue.N_idUsuario) +
+		" | Nombre: " + notiNewValue.T_nombre
 
-	// insertarLog(
-	//	notiNewValue.N_idUsuario,
-	//	"CREAR_NOTIFICACION",
-	//	descripcion,
-	// )
+	insertarLog(
+		notiNewValue.N_idUsuario,
+		"CREAR_NOTIFICACION",
+		descripcion,
+	)
+
 	c.JSON(200, gin.H{
-		"message": "Notificacion creada correctamente",
-	})
-}
+    "message": "Notificación creada correctamente",
+    "id": insertedID,
+})
+
+} 
 
 func deleteNotifications(c *gin.Context) {
 
@@ -135,9 +142,16 @@ func deleteNotifications(c *gin.Context) {
 		return
 	}
 
-	//descripcion := "Se actualizó elimaron los recordatorios con IDs: " + strconv.Itoa(ids.Ids)
+descripcion := "Notificaciones eliminadas | IDs: " +
+		idsNotifications.Ids +
+		" | Usuario ID: " + strconv.Itoa(idsNotifications.N_idUsuario)
 
-	//insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+	insertarLog(
+		idsNotifications.N_idUsuario,
+		"ELIMINAR_NOTIFICACIONES",
+		descripcion,
+	)
+
 	c.JSON(200, gin.H{
 		"message": "Notificaciones eliminadas correctamente",
 	})
@@ -221,11 +235,12 @@ func addCorreo(c *gin.Context) {
 	}
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("INSERT INTO Correos (T_asunto, T_contenido, Dt_fechaEmision, N_idToDoList) VALUES (?, ?, ?, ?)",
+	result, err := db.Exec("INSERT INTO Correos (T_asunto, T_contenido, Dt_fechaEmision, N_idToDoList) VALUES (?, ?, ?, ?, ?)",
 		correoNewValue.T_asunto,
 		correoNewValue.T_contenido,
 		correoNewValue.Dt_fechaEmision,
 		correoNewValue.N_idToDoList,
+		correoNewValue.N_idUsuario,
 	)
 
 	if err != nil {
@@ -241,13 +256,20 @@ func addCorreo(c *gin.Context) {
 		return
 	}
 
-	//insertedID, _ := result.LastInsertId()
-	//descripcion := "Se creó un correo con id: " + strconv.FormatInt(insertedID, 10)
-	//insertarLog(
-	//	correoNewValue.N_idUsuario,
-	//	"CREAR_CORREO",
-	//	descripcion,
-	//)
+	insertedID, _ := result.LastInsertId()
+
+	
+	descripcion := "Correo creado | ID: " +
+		strconv.FormatInt(insertedID, 10) +
+		" | Usuario ID: " + strconv.Itoa(correoNewValue.N_idUsuario) +
+		" | Asunto: " + correoNewValue.T_asunto
+
+	insertarLog(
+		correoNewValue.N_idUsuario,
+		"CREAR_CORREO",
+		descripcion,
+	)
+
 	c.JSON(200, gin.H{
 		"message": "Correo creado correctamente",
 	})

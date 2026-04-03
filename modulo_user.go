@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -65,7 +65,7 @@ func GetUserInfo(c *gin.Context) {
 
 }
 
-// Guardar datos del token en la base de datos
+// Guardar datos del token en redis
 func receiveTokenData(c *gin.Context) {
 	var data Token
 
@@ -87,9 +87,16 @@ func receiveTokenData(c *gin.Context) {
 		})
 		return
 	}
-	descripcion := "Se guardó token en Redis para usuario: " + data.UserId
-	insertarLog(0, "GUARDAR_TOKEN", descripcion)
 
+	userID, err := strconv.Atoi(data.UserId)
+	
+	descripcion := "Token guardado en Redis | Usuario: " + data.UserId
+
+insertarLog(
+	userID,
+	"GUARDAR_TOKEN",
+	descripcion,
+)
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
@@ -97,7 +104,7 @@ func receiveTokenData(c *gin.Context) {
 	})
 }
 
-// Obtener token de la base de datos
+// Obtener token de redis
 func getToken(c *gin.Context) {
 	var req Token
 
@@ -106,7 +113,7 @@ func getToken(c *gin.Context) {
 		return
 	}
 
-	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
+	val, err := rdb.Get(c.Request.Context(), "reset:"+req.UserId).Result()
 
 	if err != nil {
 		fmt.Printf("Error de Redis: %v\n", err)
@@ -122,7 +129,7 @@ func getToken(c *gin.Context) {
 	c.JSON(200, gin.H{"userId": req.UserId})
 }
 
-// Guardar paleta de colores en la base de datos
+// Guardar paleta de colores en redis
 func receivePaletteData(c *gin.Context) {
 	var data Palette
 
@@ -144,8 +151,15 @@ func receivePaletteData(c *gin.Context) {
 		})
 		return
 	}
-	descripcion := "Se guardó paleta en Redis para usuario: " + data.UserId
-	insertarLog(0, "GUARDAR_PALETA", descripcion)
+	userID, err := strconv.Atoi(data.UserId)
+	
+	descripcion := "Paleta guardada en Redis | Usuario ID: " + data.UserId
+
+	insertarLog(
+		userID,
+		"GUARDAR_PALETA",
+		descripcion,
+	)
 
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
@@ -154,7 +168,7 @@ func receivePaletteData(c *gin.Context) {
 	})
 }
 
-// Obtener paleta de la base de datos
+// Obtener paleta de redis
 func getPalette(c *gin.Context) {
 	var req Palette
 
@@ -163,7 +177,7 @@ func getPalette(c *gin.Context) {
 		return
 	}
 
-	val, err := rdb.Get(c.Request.Context(), req.UserId).Result()
+	val, err := rdb.Get(c.Request.Context(), "palette:"+req.UserId).Result()
 
 	if err != nil {
 		fmt.Printf("Error de Redis: %v\n", err)
@@ -174,5 +188,69 @@ func getPalette(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"userId":  req.UserId,
 		"palette": val,
+	})
+}
+
+// Guardar registro de haber hecho el tutorial en redis
+func receiveOnboardingStatus(c *gin.Context) {
+	var data Onboarding
+
+	// Leer json
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "El formato del JSON es incorrecto o faltan campos",
+		})
+		return
+	}
+
+	// Guardar en Redis
+	err := rdb.Set(ctx, "onboarding:"+data.UserId, data.Status, 0).Err()
+
+	if err != nil {
+		log.Printf("Error al guardar en Redis: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+
+	userID, err := strconv.Atoi(data.UserId)
+	
+	descripcion := "Onboarding actualizado en Redis | Usuario ID: " + data.UserId +
+		" | Estado: " + data.Status
+
+	insertarLog(
+		userID,
+		"GUARDAR_ONBOARDING",
+		descripcion,
+	)
+
+	// Respuesta exitosa
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Registro de tutorial guardado correctamente en Redis",
+	})
+}
+
+// Obtener registro de tutorial de redis
+func getOnboardingStatus(c *gin.Context) {
+	var req Onboarding
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "JSON mal formado"})
+		return
+	}
+
+	val, err := rdb.Get(c.Request.Context(), "onboarding:"+req.UserId).Result()
+
+	if err != nil {
+		fmt.Printf("Error de Redis: %v\n", err)
+		c.JSON(401, gin.H{"error": "Sesión no encontrada o expirada"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"userId": req.UserId,
+		"status": val,
 	})
 }
