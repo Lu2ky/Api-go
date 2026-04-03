@@ -63,6 +63,17 @@ type NewAcademicPeriod struct {
 	Dt_fechaInicio string `json:"fechaInicio"`
 	Dt_fechaFinal  string `json:"fechaFinal"`
 }
+type UpdateAcademicPeriod struct {
+	N_idUsuario    int     `json:"idUsuario"`
+	N_idPeriodo    int     `json:"idPeriodo"`
+	T_nombre       *string `json:"nombre"`
+	Dt_fechaInicio *string `json:"fechaInicio"`
+	Dt_fechaFinal  *string `json:"fechaFinal"`
+}
+type DeleteAcademicPeriod struct {
+	N_idUsuario int `json:"idUsuario"`
+	N_idPeriodo int `json:"idPeriodo"`
+}
 
 type OfficialSchedule struct {
 	N_idHorario            int             `json:"N_idHorario"`
