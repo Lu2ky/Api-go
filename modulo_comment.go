@@ -96,7 +96,7 @@ func addPersonalComment(c *gin.Context) {
 	}
 
 	result, err := db.Exec(
-		"INSERT INTO Comentarios (N_idHorario, T_Comentario) VALUES (?, ?, ?)",
+		"INSERT INTO Comentarios (N_idHorario, T_Comentario, N_idUsuario) VALUES (?, ?, ?)",
 		newComment.N_idHorario,
 		newComment.T_comentario,
 		newComment.N_idUsuario,
