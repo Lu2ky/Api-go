@@ -356,13 +356,13 @@ func deleteMultipleReminder(c *gin.Context) {
 		return
 	}
 
-	userID := delReminder.P_usuario
 
-	descripcion := "Se eliminaron los recordatorios de ID: " +
+	descripcion := "Se eliminaron los recordatorios ID: " +
 		delReminder.N_idRecordatorios +
-		" | Usuario: " + strconv.Itoa(userID)
+		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
 
-	insertarLog(userID, "DELETE_RECORDATORIO", descripcion)
+	insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
+
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
