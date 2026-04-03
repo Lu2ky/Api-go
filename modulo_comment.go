@@ -192,12 +192,15 @@ func deletePersonalComment(c *gin.Context) {
 		return
 	}
 
-	//insertarLog(
-	//	delComment.N_idUsuario,
-	// 	"ELIMINAR_COMENTARIO",
-	//	descripcion,
-	//  )
+	descripcion := "Comentario eliminado | ID: " +
+		strconv.Itoa(delComment.N_idComentarios) +
+		" | Usuario ID: " + strconv.Itoa(delComment.N_idUsuario)
 
+	insertarLog(
+		delComment.N_idUsuario,
+		"ELIMINAR_COMENTARIO",
+		descripcion,
+	)
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",
