@@ -271,6 +271,115 @@ func addAcademicPeriod(c *gin.Context) {
 
 	insertarLog(newAcademicPeriodValue.N_idUsuario, "AGREGAR PERIODO ACADEMICO", descripcion)
 	c.JSON(200, gin.H{
+		"message": "Periodo académico añadido correctamente",
+	})
+
+}
+
+func updateAcademicPeriod(c *gin.Context) {
+	var newAcademicPeriodValue UpdateAcademicPeriod
+
+	err := c.BindJSON(&newAcademicPeriodValue)
+
+	fmt.Printf("%v", newAcademicPeriodValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"Error": "Formato invalido de json"})
+		return
+
+	}
+
+	result, err := db.Exec("CALL editarPeriodo(?, ?, ?, ?);",
+		newAcademicPeriodValue.N_idPeriodo,
+		newAcademicPeriodValue.T_nombre,
+		newAcademicPeriodValue.Dt_fechaInicio,
+		newAcademicPeriodValue.Dt_fechaFinal,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "No se encuentra el archivo a importar"})
+		return
+
+	}
+
+	var nombre, fechaInicio, fechaFin string
+
+	if newAcademicPeriodValue.T_nombre != nil {
+		nombre = *newAcademicPeriodValue.T_nombre
+	} else {
+		nombre = "Sin cambios"
+	}
+
+	if newAcademicPeriodValue.Dt_fechaInicio != nil {
+		fechaInicio = *newAcademicPeriodValue.Dt_fechaInicio
+	} else {
+		fechaInicio = "Sin cambios"
+	}
+
+	if newAcademicPeriodValue.Dt_fechaFinal != nil {
+		fechaFin = *newAcademicPeriodValue.Dt_fechaFinal
+	} else {
+		fechaFin = "Sin cambios"
+	}
+
+	descripcion := "Se editó un periodo académico: " +
+		" | ID: " + strconv.Itoa(newAcademicPeriodValue.N_idPeriodo) +
+		" | Nombre: " + nombre +
+		" | Fecha inicial: " + fechaInicio +
+		" | Fecha final: " + fechaFin +
+		" | Usuario: " + strconv.Itoa(newAcademicPeriodValue.N_idUsuario)
+
+	insertarLog(newAcademicPeriodValue.N_idUsuario, "EDITAR PERIODO ACADEMICO", descripcion)
+	c.JSON(200, gin.H{
+		"message": "Periodo academico editado correctamente",
+	})
+
+}
+
+func deleteAcademicPeriod(c *gin.Context) {
+	var newAcademicPeriodValue DeleteAcademicPeriod
+
+	err := c.BindJSON(&newAcademicPeriodValue)
+
+	fmt.Printf("%v", newAcademicPeriodValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"Error": "Formato invalido de json"})
+		return
+
+	}
+
+	result, err := db.Exec("CALL eliminarPeriodo(?);",
+		newAcademicPeriodValue.N_idPeriodo,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "No se encuentra el archivo a importar"})
+		return
+
+	}
+
+	descripcion := "Se eliminó un periodo académico: " +
+		" | ID: " + strconv.Itoa(newAcademicPeriodValue.N_idUsuario)
+
+	insertarLog(newAcademicPeriodValue.N_idUsuario, "AGREGAR PERIODO ACADEMICO", descripcion)
+	c.JSON(200, gin.H{
 		"message": "Horario importado correctamente",
 	})
 
