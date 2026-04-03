@@ -235,11 +235,12 @@ func addCorreo(c *gin.Context) {
 	}
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("INSERT INTO Correos (T_asunto, T_contenido, Dt_fechaEmision, N_idToDoList) VALUES (?, ?, ?, ?)",
+	result, err := db.Exec("INSERT INTO Correos (T_asunto, T_contenido, Dt_fechaEmision, N_idToDoList) VALUES (?, ?, ?, ?, ?)",
 		correoNewValue.T_asunto,
 		correoNewValue.T_contenido,
 		correoNewValue.Dt_fechaEmision,
 		correoNewValue.N_idToDoList,
+		correoNewValue.N_idUsuario,
 	)
 
 	if err != nil {
@@ -255,13 +256,18 @@ func addCorreo(c *gin.Context) {
 		return
 	}
 
-	//insertedID, _ := result.LastInsertId()
-	//descripcion := "Se creó un correo con id: " + strconv.FormatInt(insertedID, 10)
-	//insertarLog(
-	//	correoNewValue.N_idUsuario,
-	//	"CREAR_CORREO",
-	//	descripcion,
-	//)
+	
+	descripcion := "Correo creado | ID: " +
+		strconv.FormatInt(insertedID, 10) +
+		" | Usuario ID: " + strconv.Itoa(correoNewValue.N_idUsuario) +
+		" | Asunto: " + correoNewValue.T_asunto
+
+	insertarLog(
+		correoNewValue.N_idUsuario,
+		"CREAR_CORREO",
+		descripcion,
+	)
+
 	c.JSON(200, gin.H{
 		"message": "Correo creado correctamente",
 	})
