@@ -122,32 +122,36 @@ type DelTag struct {
 	CodUsuario   *string `json:"codUsuario"`
 }
 type PersonalScheduleNewValue struct {
-	NewActivityValue   string `json:"NewActivityValue" binding:"required"`
-	IdPersonalSchedule int    `json:"IdPersonalSchedule" binding:"required"`
+	NewActivityValue   string  `json:"NewActivityValue" binding:"required"`
+	IdPersonalSchedule int     `json:"IdPersonalSchedule" binding:"required"`
+	CodUsuario         *string `json:"codUsuario"`
 }
 type forDeleteOrRecoveryPersonalSchedule struct {
-	IdPersonalSchedule int `json:"IdPersonalSchedule" binding:"required"`
+	IdPersonalSchedule int     `json:"IdPersonalSchedule" binding:"required"`
+	CodUsuario         *string `json:"codUsuario"`
 }
 type NewPersonalActivity struct {
-	P_usuario     int    `json:"P_usuario"`
-	P_nombreCurso string `json:"P_nombreCurso"`
-	P_descripcion string `json:"P_descripcion"`
-	P_fechaInicio string `json:"P_fechaInicio"`
-	P_fechaFin    string `json:"P_fechaFin"`
-	P_dia         int    `json:"P_dia"`
-	P_horaInicio  string `json:"P_horaInicio"`
-	P_horaFin     string `json:"P_horaFin"`
-	P_periodo     int    `json:"P_periodo"`
+	P_usuario     int     `json:"P_usuario"`
+	P_nombreCurso string  `json:"P_nombreCurso"`
+	P_descripcion string  `json:"P_descripcion"`
+	P_fechaInicio string  `json:"P_fechaInicio"`
+	P_fechaFin    string  `json:"P_fechaFin"`
+	P_dia         int     `json:"P_dia"`
+	P_horaInicio  string  `json:"P_horaInicio"`
+	P_horaFin     string  `json:"P_horaFin"`
+	P_periodo     int     `json:"P_periodo"`
+	CodUsuario    *string `json:"codUsuario"`
 }
 type EditPersonalActivity struct {
-	P_idCurso     int    `json:"P_idCurso"`
-	P_nombreCurso string `json:"P_nombreCurso"`
-	P_descripcion string `json:"P_descripcion"`
-	P_fechaInicio string `json:"P_fechaInicio"`
-	P_fechaFin    string `json:"P_fechaFin"`
-	P_dia         int    `json:"P_dia"`
-	P_horaInicio  string `json:"P_horaInicio"`
-	P_horaFin     string `json:"P_horaFin"`
+	P_idCurso     int     `json:"P_idCurso"`
+	P_nombreCurso string  `json:"P_nombreCurso"`
+	P_descripcion string  `json:"P_descripcion"`
+	P_fechaInicio string  `json:"P_fechaInicio"`
+	P_fechaFin    string  `json:"P_fechaFin"`
+	P_dia         int     `json:"P_dia"`
+	P_horaInicio  string  `json:"P_horaInicio"`
+	P_horaFin     string  `json:"P_horaFin"`
+	CodUsuario    *string `json:"codUsuario"`
 }
 type ofcComments struct {
 	N_idHorario     int           `json:"N_idHorario"`
@@ -159,18 +163,24 @@ type ofcComments struct {
 	B_isDeleted     *sql.NullBool `json:"B_isDeleted"`
 }
 type new_ofcComments struct {
-	N_idHorario  int    `json:"N_idHorario"`
-	N_idUsuario  int    `json:"N_idUsuario"`
-	T_comentario string `json:"T_comentario"`
+	N_idHorario  int     `json:"N_idHorario"`
+	N_idUsuario  int     `json:"N_idUsuario"`
+	T_comentario string  `json:"T_comentario"`
+	CodUsuario   *string `json:"codUsuario"`
+	N_idCurso    int     `json:"N_idCurso"`
 }
 type edit_ofcComment struct {
-	N_idComentarios int    `json:"N_idComentarios"`
-	N_idUsuario     int    `json:"N_idUsuario"`
-	T_comentario    string `json:"T_comentario"`
+	N_idComentarios int     `json:"N_idComentarios"`
+	N_idUsuario     int     `json:"N_idUsuario"`
+	T_comentario    string  `json:"T_comentario"`
+	CodUsuario      *string `json:"codUsuario"`
+	N_idCurso       int     `json:"N_idCurso"`
 }
 type del_ofcComment struct {
-	N_idComentarios int `json:"N_idComentarios" binding:"required"`
-	N_idUsuario     int `json:"N_idUsuario"`
+	N_idComentarios int     `json:"N_idComentarios" binding:"required"`
+	N_idUsuario     int     `json:"N_idUsuario"`
+	CodUsuario      *string `json:"codUsuario"`
+	N_idCurso       int     `json:"N_idCurso"`
 }
 type Reminders struct {
 	N_idToDoList        int            `json:"N_idToDoList"`
@@ -209,6 +219,7 @@ type ReminderNewValue struct {
 	P_tag3        *string `json:"P_tag3"`
 	P_tag4        *string `json:"P_tag4"`
 	P_tag5        *string `json:"P_tag5"`
+	CodUsuario    *string `json:"codUsuario"`
 }
 type EditReminder struct {
 	P_usuario     int     `json:"P_usuario"`
@@ -223,14 +234,17 @@ type EditReminder struct {
 	P_tag3        *string `json:"P_tag3"`
 	P_tag4        *string `json:"P_tag4"`
 	P_tag5        *string `json:"P_tag5"`
+	CodUsuario    *string `json:"codUsuario"`
 }
 type DelReminder struct {
-	N_idRecordatorio int `json:"N_idRecordatorio"`
-	P_usuario        int `json:"P_usuario"`
+	N_idRecordatorio int     `json:"N_idRecordatorio"`
+	P_usuario        int     `json:"P_usuario"`
+	CodUsuario       *string `json:"codUsuario"`
 }
 type MultiDelReminder struct {
-	N_idRecordatorios string `json:"N_idRecordatorios"`
-	P_usuario         int    `json:"P_usuario"`
+	N_idRecordatorios string  `json:"N_idRecordatorios"`
+	P_usuario         int     `json:"P_usuario"`
+	CodUsuario        *string `json:"codUsuario"`
 }
 type TipoCurso struct {
 	N_idTipoCurso int    `json:"N_idTipoCurso"`
@@ -247,21 +261,18 @@ type Notificacion struct {
 	B_estado         string `json:"estado"`
 }
 type NewNotificacion struct {
-	T_nombre        string `json:"nombre"`
-	T_descripcion   string `json:"descripcion"`
-	Dt_fechaEmision string `json:"fechaEmision"`
-	N_idToDoList    int    `json:"idToDoList"`
-	N_idUsuario     int    `json:"N_idUsuario"`
+	T_nombre        string  `json:"nombre"`
+	T_descripcion   string  `json:"descripcion"`
+	Dt_fechaEmision string  `json:"fechaEmision"`
+	N_idToDoList    int     `json:"idToDoList"`
+	N_idUsuario     int     `json:"N_idUsuario"`
+	CodUsuario      *string `json:"codUsuario"`
 }
 type MuteNotification struct {
 	P_idUsuario       int     `json:"idUsuario"`
 	P_correo          *string `json:"correo"`
 	P_antelacionNotis *string `json:"antelacionNotis"`
-<<<<<<< HEAD
 	CodUsuario        *string `json:"codUsuario"`
-=======
-	N_idUsuario       int     `json:"N_idUsuario"`
->>>>>>> origin/Testing
 }
 type NewCorreo struct {
 	T_asunto        string `json:"asunto"`
@@ -284,7 +295,7 @@ type ImportSchedule struct {
 	Nombre           string `json:"nombre"`
 	Semestre         int    `json:"semestre"`
 	Programa         string `json:"programa"`
-	CodUSuario       string `json:"codUsuario"`
+	CodUsuario       string `json:"codUsuario"`
 	Nrc              string `json:"nrc"`
 	NombreCurso      string `json:"nombreCurso"`
 	Docente          string `json:"docente"`
@@ -305,8 +316,9 @@ type Token struct {
 }
 
 type DeleteNotification struct {
-	Ids         string `json:"ids"`
-	N_idUsuario int    `json:"N_idUsuario"`
+	Ids         string  `json:"ids"`
+	N_idUsuario int     `json:"N_idUsuario"`
+	CodUsuario  *string `json:"codUsuario"`
 }
 
 type Palette struct {

@@ -99,7 +99,7 @@ func GetTagsByUserId(c *gin.Context) {
 	c.JSON(200, TagsArray)
 }
 
-// TO DO: FUNCION PARA SACAR LAS ETIQUETAS DE UN RECORDATORIO POR SU NOMBRE
+// FUNCION PARA SACAR LAS ETIQUETAS DE UN RECORDATORIO POR SU NOMBRE
 func GetTagsByUserIdAndReminderId(c *gin.Context) {
 
 	//ID del usuario
@@ -195,7 +195,7 @@ func GetTagsByUserIdAndReminderId(c *gin.Context) {
 	c.JSON(200, TagsArray)
 }
 
-// TO DO: DELETE TAG
+// DELETE TAG
 func deleteTag(c *gin.Context) {
 
 	var delTag DelTag
@@ -213,11 +213,12 @@ func deleteTag(c *gin.Context) {
 		fmt.Printf("\nError de conexión: %v", err2)
 
 	} else if deleted > 0 {
-		fmt.Printf("\nRegsitro eliminado con éxito")
+		fmt.Printf("\nRegistro eliminado con éxito")
 	} else {
-		fmt.Printf("\nNo es encontró registro relacionado")
+		fmt.Printf("\nNo se encontró registro relacionado")
 	}
 
+	// Llamado al procedimiento
 	result, err := db.Exec("CALL eliminar_etiqueta(?)", delTag.N_idEtiqueta)
 
 	if err != nil {

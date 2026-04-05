@@ -88,7 +88,7 @@ func GetUserInfo(c *gin.Context) {
 		return
 	}
 	// Guardar datos en redis
-	err2 := rdb.Set(ctx, "UserInfo:"+id_user, data, 8*time.Hour).Err()
+	err2 := rdb.Set(ctx, "UserInfo:"+id_user, data, 48*time.Hour).Err()
 
 	if err2 != nil {
 		log.Printf("Error al guardar en Redis: %v", err2)
@@ -127,14 +127,14 @@ func receiveTokenData(c *gin.Context) {
 	}
 
 	userID, err := strconv.Atoi(data.UserId)
-	
+
 	descripcion := "Token guardado en Redis | Usuario: " + data.UserId
 
-insertarLog(
-	userID,
-	"GUARDAR_TOKEN",
-	descripcion,
-)
+	insertarLog(
+		userID,
+		"GUARDAR_TOKEN",
+		descripcion,
+	)
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
@@ -190,7 +190,7 @@ func receivePaletteData(c *gin.Context) {
 		return
 	}
 	userID, err := strconv.Atoi(data.UserId)
-	
+
 	descripcion := "Paleta guardada en Redis | Usuario ID: " + data.UserId
 
 	insertarLog(
@@ -253,7 +253,7 @@ func receiveOnboardingStatus(c *gin.Context) {
 	}
 
 	userID, err := strconv.Atoi(data.UserId)
-	
+
 	descripcion := "Onboarding actualizado en Redis | Usuario ID: " + data.UserId +
 		" | Estado: " + data.Status
 

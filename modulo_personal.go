@@ -2,8 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
 	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,6 +17,27 @@ import (
 func getPersonalScheduleByUserId(c *gin.Context) {
 	id := c.Param("id")
 	var rows *sql.Rows
+
+	//	Consulta a redis
+	val, err2 := rdb.Get(c.Request.Context(), "PersonalSchedule:"+id).Result()
+
+	if err2 == nil {
+		fmt.Printf("\n Si existe registro")
+		var perschedules []PersonalSchedule
+
+		err := json.Unmarshal([]byte(val), &perschedules)
+
+		if err == nil {
+			c.JSON(200, perschedules)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
+
 	rows, err := db.Query(`
 		SELECT ao.*
 		FROM ActividadesPersonales ao
@@ -47,6 +73,25 @@ func getPersonalScheduleByUserId(c *gin.Context) {
 		perschedules = append(perschedules, perschedule)
 
 	}
+
+	// Convertir a formato apto para redis
+	data, err := json.Marshal(perschedules)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error al serializar datos"})
+		return
+	}
+	// Guardar datos en redis
+	err3 := rdb.Set(ctx, "PersonalSchedule:"+id, data, 48*time.Hour).Err()
+
+	if err3 != nil {
+		log.Printf("Error al guardar en Redis: %v", err3)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+
+	// Devuelve la consulta de la base relacional
 	c.JSON(200, perschedules)
 }
 
@@ -94,6 +139,18 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 		en el segundo argumento, los parámetros deben estar en el mismo orden que son solicitados en la consulta.
 	*/
 
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*personalNewValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
 	//	Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL editar_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?)",
 		personalNewValue.P_idCurso,
@@ -124,7 +181,7 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 	descripcion := "Se actualizó actividad personal ID: " + strconv.Itoa(personalNewValue.P_idCurso)
 
 	insertarLog(
-		0, 
+		0,
 		"UPDATE_ACTIVIDAD_PERSONAL",
 		descripcion,
 	)
@@ -158,6 +215,20 @@ func updateNameOfPersonalScheduleByIdCourse(c *gin.Context) {
 		Los signos de pregunta (?) indican los parámetros que se envían a la consulta.
 		en el segundo argumento, los parámetros deben estar en el mismo orden que son solicitados en la consulta.
 	*/
+
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*newValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace la acutalización
 	result, err := db.Exec("UPDATE ActividadesPersonales SET Actividad = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
 
 	if err != nil {
@@ -190,6 +261,20 @@ func updateDescriptionOfPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
 		return
 	}
+
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*newValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace la acutalización
 	result, err := db.Exec("UPDATE ActividadesPersonales SET Descripcion = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
 	if err != nil {
 		log.Printf("Database error: %v", err)
@@ -218,6 +303,20 @@ func updateStartHourOfPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
 		return
 	}
+
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*newValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace la acutalización
 	result, err := db.Exec("UPDATE ActividadesPersonales SET Hora_Inicio = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
 	if err != nil {
 		log.Printf("Database error: %v", err)
@@ -246,6 +345,20 @@ func updateEndHourOfPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
 		return
 	}
+
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*newValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace la acutalización
 	result, err := db.Exec("UPDATE ActividadesPersonales SET Hora_Fin = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
 	if err != nil {
 		log.Printf("Database error: %v", err)
@@ -275,6 +388,19 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 		return
 	}
 
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*deleteValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace la acutalización
 	result, err := db.Exec("CALL eliminar_actividad_personal (?);", deleteValue.IdPersonalSchedule)
 
 	if err != nil {
@@ -321,6 +447,18 @@ func addPersonalActivity(c *gin.Context) {
 			P_periodo		int			`json:"P_periodo"`
 		}
 	*/
+
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*personalNewValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
 
 	//	Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -413,10 +551,10 @@ func addPersonalActivity(c *gin.Context) {
 			return
 		}
 	*/
-		descripcion := "Se creó actividad personal: " + personalNewValue.P_nombreCurso
+	descripcion := "Se creó actividad personal: " + personalNewValue.P_nombreCurso
 
 	insertarLog(
-		personalNewValue.P_usuario, 
+		personalNewValue.P_usuario,
 		"INSERT_ACTIVIDAD_PERSONAL",
 		descripcion,
 	)
@@ -425,7 +563,7 @@ func addPersonalActivity(c *gin.Context) {
 	})
 }
 
-// Get tipo cursos
+// Get tipo cursos QUERDE AQUIIIIIIIIIIIIIIIII ES DIFERENTE ES OTRO GET
 func GetTiposCurso(c *gin.Context) {
 
 	/*
@@ -435,7 +573,24 @@ func GetTiposCurso(c *gin.Context) {
 			B_isDeleted   int  `json:"B_isDeleted"`
 		}
 	*/
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "CourseType").Result()
 
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var tiposCursoArray []TipoCurso
+
+		err := json.Unmarshal([]byte(val), &tiposCursoArray)
+
+		if err == nil {
+			c.JSON(200, tiposCursoArray)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
 	rows, err := db.Query("SELECT * FROM TipoCurso")
 
 	if err != nil {
@@ -472,5 +627,23 @@ func GetTiposCurso(c *gin.Context) {
 		return
 	}
 
+	// Convertir a formato apto para redis
+	data, err := json.Marshal(tiposCursoArray)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error al serializar datos"})
+		return
+	}
+	// Guardar datos en redis
+	err2 := rdb.Set(ctx, "CourseType", data, 48*time.Hour).Err()
+
+	if err2 != nil {
+		log.Printf("Error al guardar en Redis: %v", err2)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+
+	// Devuelve la consulta de la base relacional
 	c.JSON(200, tiposCursoArray)
 }

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,6 +38,27 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 
 		El operador := lo que hace es definir una variable e inferir su tipo automáticamente.
 	*/
+
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "OfficialSchedule:"+id).Result()
+
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var ofcschedules []OfficialSchedule
+
+		err := json.Unmarshal([]byte(val), &ofcschedules)
+
+		if err == nil {
+			c.JSON(200, ofcschedules)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
+
 	rows, err := db.Query(`SELECT ao.* FROM ActividadesOficiales ao JOIN Usuarios u ON ao.N_idUsuario = u.N_idUsuario WHERE u.T_codUsuario = ?`, id)
 
 	//	si err != nil entonces significa que hay un error.
@@ -102,7 +126,25 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 		return
 	}
 
-	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
+	// Convertir a formato apto para redis
+	data, err := json.Marshal(ofcschedules)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error al serializar datos"})
+		return
+	}
+	// Guardar datos en redis
+	err2 := rdb.Set(ctx, "OfficialSchedule:"+id, data, 48*time.Hour).Err()
+
+	if err2 != nil {
+		log.Printf("Error al guardar en Redis: %v", err2)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+
+	// Devuelve la consulta de la base relacional
+	// Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
 	c.JSON(200, ofcschedules)
 }
 
@@ -184,6 +226,27 @@ func getAcademicPeriods(c *gin.Context) {
 
 		El operador := lo que hace es definir una variable e inferir su tipo automáticamente.
 	*/
+
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "AcademicPeriods").Result()
+
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var ofcschedules []AcademicPeriod
+
+		err := json.Unmarshal([]byte(val), &ofcschedules)
+
+		if err == nil {
+			c.JSON(200, ofcschedules)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
+
 	rows, err := db.Query(`SELECT * FROM PeriodoAcademico;`)
 
 	//	si err != nil entonces significa que hay un error.
@@ -226,6 +289,24 @@ func getAcademicPeriods(c *gin.Context) {
 		return
 	}
 
+	// Convertir a formato apto para redis
+	data, err := json.Marshal(ofcschedules)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error al serializar datos"})
+		return
+	}
+	// Guardar datos en redis
+	err2 := rdb.Set(ctx, "AcademicPeriods", data, 48*time.Hour).Err()
+
+	if err2 != nil {
+		log.Printf("Error al guardar en Redis: %v", err2)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Error interno al guardar en caché",
+		})
+		return
+	}
+
+	// Devuelve la consulta de la base relacionals
 	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
 	c.JSON(200, ofcschedules)
 }
@@ -243,6 +324,19 @@ func addAcademicPeriod(c *gin.Context) {
 
 	}
 
+	// Borrar registro de periodos académicos de redis
+	deleted, err2 := rdb.Del(ctx, "AcademicPeriods").Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL agregarPeriodo(?, ?, ?);",
 		newAcademicPeriodValue.T_nombre,
 		newAcademicPeriodValue.Dt_fechaInicio,
@@ -289,6 +383,19 @@ func updateAcademicPeriod(c *gin.Context) {
 
 	}
 
+	// Borrar registro de periodos académicos de redis
+	deleted, err2 := rdb.Del(ctx, "AcademicPeriods").Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL editarPeriodo(?, ?, ?, ?);",
 		newAcademicPeriodValue.N_idPeriodo,
 		newAcademicPeriodValue.T_nombre,
@@ -357,10 +464,23 @@ func deleteAcademicPeriod(c *gin.Context) {
 
 	}
 
+	// Borrar registro de periodos académicos de redis
+	deleted, err2 := rdb.Del(ctx, "AcademicPeriods").Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
 	result, err := db.Exec("CALL eliminarPeriodo(?);",
 		newAcademicPeriodValue.N_idPeriodo,
 	)
 
+	// Aquí se hace el llamado al Procedimiento
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
