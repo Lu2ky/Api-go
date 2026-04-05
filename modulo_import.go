@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -41,11 +42,23 @@ func importSchedule(c *gin.Context) {
 
 	*/
 
+	// Borrar registro de horario oficial de redis
+	deleted, err2 := rdb.Del(ctx, "OfficialSchedule:"+newScheduleValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
 	result, err := db.Exec("CALL importarHorario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		newScheduleValue.Nombre,
 		newScheduleValue.Semestre,
 		newScheduleValue.Programa,
-		newScheduleValue.CodUSuario,
+		newScheduleValue.CodUsuario,
 		newScheduleValue.Nrc,
 		newScheduleValue.NombreCurso,
 		newScheduleValue.Docente,
@@ -73,14 +86,14 @@ func importSchedule(c *gin.Context) {
 		return
 
 	}
-	descripcion := "Se importó horario del usuario: " + newScheduleValue.CodUSuario +
+	descripcion := "Se importó horario del usuario: " + newScheduleValue.CodUsuario +
 		" | Curso: " + newScheduleValue.NombreCurso +
 		" | NRC: " + newScheduleValue.Nrc
 
 	var userID int
 	err = db.QueryRow(
 		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
-		newScheduleValue.CodUSuario,
+		newScheduleValue.CodUsuario,
 	).Scan(&userID)
 
 	if err != nil {
