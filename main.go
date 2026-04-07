@@ -129,7 +129,7 @@ func registerV1Routes(router gin.IRouter) {
 		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
 	}
 	router.POST("/schedules/activities/times", getActivitiesTimesData)
-	router.GET("", getAcademicPeriods)
+	router.GET("/academic-periods", getAcademicPeriods)
 	router.POST("/academic-periods/insert", addAcademicPeriod)
 	router.POST("/academic-periods/update", updateAcademicPeriod)
 	router.POST("/academic-periods/delete", deleteAcademicPeriod)
