@@ -206,7 +206,7 @@ func deleteTag(c *gin.Context) {
 		return
 	}
 
-	// Borrar registro de datos de usuario de redis
+	// Borrar registro de etiquetas de usuario de redis
 	deleted, err2 := rdb.Del(ctx, "TagsByUser:"+*delTag.CodUsuario).Result()
 
 	if err2 != nil {
