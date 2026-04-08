@@ -379,6 +379,18 @@ func updateReminderById(c *gin.Context) {
 		fmt.Printf("\nNo se encontró registro relacionado")
 	}
 
+	// Borrar registro de etiquetas de usuario de redis
+	deleted, err4 := rdb.Del(ctx, "TagsByUser:"+*reminderNewValue.CodUsuario).Result()
+
+	if err4 != nil {
+		fmt.Printf("\nError de conexión: %v", err4)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
 	//	Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL editar_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		reminderNewValue.P_idToDo,
