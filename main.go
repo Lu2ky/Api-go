@@ -126,9 +126,23 @@ func registerV1Routes(router gin.IRouter) {
 	protected.Use(autho.AuthMiddleware())
 	{
 		// Official schedules
+		protected.GET("/course-types", GetTiposCurso)
 		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
+		protected.POST("/schedules/activities/times", getActivitiesTimesData)
+
+		// Schedule import
+		protected.POST("/schedules/import", importSchedule)
+
+		//	Academic periods
+		protected.GET("/academic-periods", getAcademicPeriods)
+		protected.POST("/academic-periods/insert", addAcademicPeriod)
+		protected.POST("/academic-periods/update", updateAcademicPeriod)
+		protected.POST("/academic-periods/delete", deleteAcademicPeriod)
 
 		// Personal comments
+		protected.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
+		protected.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
+		protected.POST("/comments/personal", addPersonalComment)
 		protected.POST("/comments/personal/update", updatePersonalComment)
 		protected.POST("/comments/personal/delete", deletePersonalComment)
 
@@ -158,31 +172,15 @@ func registerV1Routes(router gin.IRouter) {
 		// User configuration
 		protected.GET("/users/:id", GetUserInfo)
 		protected.POST("/notifications/mute", muteNotification)
+
+		// Paleta de colores
+		protected.POST("/palette", receivePaletteData)
+		protected.POST("/palette/get", getPalette)
 	}
-	router.POST("/schedules/activities/times", getActivitiesTimesData)
-	router.GET("/academic-periods", getAcademicPeriods)
-	router.POST("/academic-periods/insert", addAcademicPeriod)
-	router.POST("/academic-periods/update", updateAcademicPeriod)
-	router.POST("/academic-periods/delete", deleteAcademicPeriod)
-
-	// Personal comments
-	router.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
-	router.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
-	router.POST("/comments/personal", addPersonalComment)
-
-	// Personal schedules
-	router.GET("/course-types", GetTiposCurso)
 
 	// Notifications and emails
 	router.POST("/notifications/delete", deleteNotifications)
 	router.POST("/emails", addCorreo)
-
-	// Schedule import
-	router.POST("/schedules/import", importSchedule)
-
-	// Paleta de colores
-	router.POST("/palette", receivePaletteData)
-	router.POST("/palette/get", getPalette)
 
 	// Registro de incorporación
 	router.POST("/onboarding", receiveOnboardingStatus)
