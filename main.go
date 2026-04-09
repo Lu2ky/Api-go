@@ -128,6 +128,9 @@ func registerV1Routes(router gin.IRouter) {
 		// Official schedules
 		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
 
+		// Personal comments
+		protected.POST("/comments/personal/update", updatePersonalComment)
+
 		// User configuration
 		protected.GET("/users/:id", GetUserInfo)
 		protected.POST("/notifications/mute", muteNotification)
@@ -141,7 +144,6 @@ func registerV1Routes(router gin.IRouter) {
 	router.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
 	router.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
 	router.POST("/comments/personal", addPersonalComment)
-	router.POST("/comments/personal/update", updatePersonalComment)
 	router.POST("/comments/personal/delete", deletePersonalComment)
 
 	// Personal schedules
