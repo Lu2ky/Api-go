@@ -127,6 +127,10 @@ func registerV1Routes(router gin.IRouter) {
 	{
 		// Official schedules
 		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
+
+		// User configuration
+		protected.GET("/users/:id", GetUserInfo)
+		protected.POST("/notifications/mute", muteNotification)
 	}
 	router.POST("/schedules/activities/times", getActivitiesTimesData)
 	router.GET("/academic-periods", getAcademicPeriods)
@@ -168,10 +172,6 @@ func registerV1Routes(router gin.IRouter) {
 
 	// Schedule import
 	router.POST("/schedules/import", importSchedule)
-
-	// User configuration
-	router.GET("/users/:id", GetUserInfo)
-	router.POST("/notifications/mute", muteNotification)
 
 	// Paleta de colores
 	router.POST("/palette", receivePaletteData)
