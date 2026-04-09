@@ -132,9 +132,9 @@ func registerV1Routes(router gin.IRouter) {
 		protected.POST("/comments/personal/update", updatePersonalComment)
 
 		// Tags
-		router.GET("/tags/users/:id", GetTagsByUserId)
-		router.GET("/tags/users/:id/reminders/:reminderId", GetTagsByUserIdAndReminderId)
-		router.POST("/tags/delete", deleteTag)
+		protected.GET("/tags/users/:id", GetTagsByUserId)
+		protected.GET("/tags/users/:id/reminders/:reminderId", GetTagsByUserIdAndReminderId)
+		protected.POST("/tags/delete", deleteTag)
 
 		// Reminders
 		protected.GET("/reminders/users/:id", GetRemindersByUserId)
