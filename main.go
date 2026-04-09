@@ -130,6 +130,13 @@ func registerV1Routes(router gin.IRouter) {
 
 		// Personal comments
 		protected.POST("/comments/personal/update", updatePersonalComment)
+		protected.POST("/comments/personal/delete", deletePersonalComment)
+
+		// Personal schedules
+		protected.GET("/schedules/personal/users/:id", getPersonalScheduleByUserId)
+		protected.POST("/schedules/personal", addPersonalActivity)
+		protected.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
+		protected.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
 
 		// Tags
 		protected.GET("/tags/users/:id", GetTagsByUserId)
@@ -153,17 +160,13 @@ func registerV1Routes(router gin.IRouter) {
 	router.POST("/academic-periods/insert", addAcademicPeriod)
 	router.POST("/academic-periods/update", updateAcademicPeriod)
 	router.POST("/academic-periods/delete", deleteAcademicPeriod)
+
 	// Personal comments
 	router.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
 	router.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
 	router.POST("/comments/personal", addPersonalComment)
-	router.POST("/comments/personal/delete", deletePersonalComment)
 
 	// Personal schedules
-	router.GET("/schedules/personal/users/:id", getPersonalScheduleByUserId)
-	router.POST("/schedules/personal", addPersonalActivity)
-	router.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
-	router.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
 	router.GET("/course-types", GetTiposCurso)
 
 	// Notifications and emails
