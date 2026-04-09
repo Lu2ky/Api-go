@@ -139,6 +139,10 @@ func registerV1Routes(router gin.IRouter) {
 		// Reminders
 		protected.GET("/reminders/users/:id", GetRemindersByUserId)
 		protected.GET("/reminders/users/:id/tags", GetRemindersTagsByUserId)
+		protected.POST("/reminders", addReminder)
+		protected.POST("/reminders/update", updateReminderById)
+		protected.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
+		protected.POST("/reminders/delete/multiple", deleteMultipleReminder)
 
 		// User configuration
 		protected.GET("/users/:id", GetUserInfo)
@@ -161,12 +165,6 @@ func registerV1Routes(router gin.IRouter) {
 	router.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
 	router.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
 	router.GET("/course-types", GetTiposCurso)
-
-	// Reminders
-	router.POST("/reminders", addReminder)
-	router.POST("/reminders/update", updateReminderById)
-	router.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
-	router.POST("/reminders/delete/multiple", deleteMultipleReminder)
 
 	// Notifications and emails
 	router.GET("/notifications/users/:id", GetNotificaciones)
