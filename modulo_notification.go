@@ -125,6 +125,12 @@ func addNotificacion(c *gin.Context) {
 		fmt.Printf("\nNo se encontró registro relacionado")
 	}
 
+	if notiNewValue.CodUsuario != nil {
+		rdb.Del(ctx, "Notifications:"+*notiNewValue.CodUsuario)
+	}
+
+	fmt.Printf("%#v\n", notiNewValue)
+
 	//	Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("INSERT INTO Notificaciones (T_nombre, T_descripcion, Dt_fechaEmision, N_idToDoList)  VALUES (?, ?, ?, ?)",
 		notiNewValue.T_nombre,
@@ -135,7 +141,12 @@ func addNotificacion(c *gin.Context) {
 
 	if err != nil {
 		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
+
+		c.JSON(500, gin.H{
+			"error":           "Error interno en la base de datos",
+			"mensaje_mysql":   err.Error(),
+			"datos_recibidos": notiNewValue,
+		})
 		return
 	}
 
