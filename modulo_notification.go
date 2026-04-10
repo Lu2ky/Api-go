@@ -310,12 +310,11 @@ func addCorreo(c *gin.Context) {
 	}
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("INSERT INTO Correos (T_asunto, T_contenido, Dt_fechaEmision, N_idToDoList) VALUES (?, ?, ?, ?, ?)",
+	result, err := db.Exec("INSERT INTO Correos (T_asunto, T_contenido, Dt_fechaEmision, N_idToDoList) VALUES (?, ?, ?, ?)",
 		correoNewValue.T_asunto,
 		correoNewValue.T_contenido,
 		correoNewValue.Dt_fechaEmision,
 		correoNewValue.N_idToDoList,
-		correoNewValue.N_idUsuario,
 	)
 
 	if err != nil {
