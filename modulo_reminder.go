@@ -421,10 +421,7 @@ func deleteOrRecoverReminder(c *gin.Context) {
 	}
 
 	if delReminder.P_usuario == 0 {
-		c.JSON(500, gin.H{
-			"error":           "Error interno en la base de datos",
-			"datos_recibidos": delReminder,
-		})
+		c.JSON(400, gin.H{"error": "usuario requerido"})
 		return
 	}
 
