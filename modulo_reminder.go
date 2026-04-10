@@ -302,8 +302,9 @@ func addReminder(c *gin.Context) {
 		" | Usuario: " + strconv.Itoa(reminderNewValue.P_usuario) +
 		" | Nombre: " + reminderNewValue.P_nombre
 
-	// Salida
 	insertarLog(reminderNewValue.P_usuario, "CREAR_RECORDATORIO", descripcion)
+
+	// Salida
 	c.JSON(200, gin.H{
 		"message":    "Recordatorio creado correctamente",
 		"toDoId":     toDoId,
@@ -397,14 +398,33 @@ func updateReminderById(c *gin.Context) {
 	rowsAffected, _ := result.RowsAffected()
 
 	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Horario oficial no encontrado"})
+		c.JSON(404, gin.H{"error": "Recordatorio no encontrado"})
 		return
 	}
+
+	// Consulta el id toDo del recordatorio
+	var toDoId = reminderNewValue.P_idToDo
+	var reminderId int64
+
+	err5 := db.QueryRow("SELECT N_idRecordatorio FROM ToDoList WHERE N_idToDoList = ?",
+		toDoId,
+	).Scan(&reminderId)
+
+	if err5 != nil {
+		log.Printf("Error ejecutando o leyendo resultado: %v", err5)
+		c.JSON(500, gin.H{"error": "Error al consultar el id"})
+		return
+	}
+
+	// Log
 	descripcion := "Se actualizó recordatorio ID: " + strconv.Itoa(reminderNewValue.P_idToDo)
 
 	insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+
+	// Salida
 	c.JSON(200, gin.H{
-		"message": "Recordatorio creado correctamente",
+		"message":    "Recordatorio actualizado correctamente",
+		"reminderId": reminderId,
 	})
 }
 
