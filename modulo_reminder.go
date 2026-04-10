@@ -260,17 +260,12 @@ func addReminder(c *gin.Context) {
 		fmt.Printf("\nNo se encontró registro relacionado")
 	}
 
-	// Iniciar transacción para garantizar la misma conexión
-	tx, err := db.Begin()
-	if err != nil {
-		log.Printf("Error al iniciar transacción: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-	defer tx.Rollback()
+	// Variables para salida
+	var toDoId int64
+	var reminderId int64
 
 	// Aquí se hace el llamado al Procedimiento
-	rows, err := tx.Query("SELECT crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	err5 := db.QueryRow("SELECT crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		reminderNewValue.P_usuario,
 		reminderNewValue.P_nombre,
 		reminderNewValue.P_descripcion,
@@ -281,51 +276,38 @@ func addReminder(c *gin.Context) {
 		reminderNewValue.P_tag3,
 		reminderNewValue.P_tag4,
 		reminderNewValue.P_tag5,
-	)
-	if err != nil {
-		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-	defer rows.Close()
+	).Scan(&toDoId)
 
-	var newID int64
-
-	// Navegar por todos los result sets hasta encontrar el que tiene el ID
-	for {
-		if rows.Next() {
-			err = rows.Scan(&newID)
-			if err != nil {
-				log.Printf("Error al leer resultado: %v", err)
-			}
-		}
-		if !rows.NextResultSet() {
-			break
-		}
-	} // <-- el for cierra aquí
-
-	if err = rows.Err(); err != nil {
-		log.Printf("Error en rows: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
+	if err5 != nil {
+		log.Printf("Error ejecutando o leyendo resultado: %v", err5)
+		c.JSON(500, gin.H{"error": "Error al crear"})
 		return
 	}
 
-	// Confirmar la transacción
-	if err = tx.Commit(); err != nil {
-		log.Printf("Error al confirmar transacción: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
+	// Consulta el id toDo del recordatorio
+	err6 := db.QueryRow("SELECT N_idRecordatorio FROM ToDoList WHERE N_idToDoList = ?",
+		toDoId,
+	).Scan(&reminderId)
+
+	if err6 != nil {
+		log.Printf("Error ejecutando o leyendo resultado: %v", err5)
+		c.JSON(500, gin.H{"error": "Error al consultar el id"})
 		return
 	}
 
-	log.Printf("ID del ToDo creado: %d", newID)
-	descripcion := "Se creó recordatorio ID: " + strconv.FormatInt(newID, 10) +
+	// Log
+
+	log.Printf("ID del ToDo creado: %d", reminderId)
+	descripcion := "Se creó recordatorio ID: " + strconv.FormatInt(reminderId, 10) +
 		" | Usuario: " + strconv.Itoa(reminderNewValue.P_usuario) +
 		" | Nombre: " + reminderNewValue.P_nombre
 
+	// Salida
 	insertarLog(reminderNewValue.P_usuario, "CREAR_RECORDATORIO", descripcion)
 	c.JSON(200, gin.H{
 		"message":    "Recordatorio creado correctamente",
-		"InsertedId": newID,
+		"toDoId":     toDoId,
+		"reminderId": reminderId,
 	})
 }
 
@@ -415,7 +397,7 @@ func updateReminderById(c *gin.Context) {
 	rowsAffected, _ := result.RowsAffected()
 
 	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
+		c.JSON(404, gin.H{"error": "Horario oficial no encontrado"})
 		return
 	}
 	descripcion := "Se actualizó recordatorio ID: " + strconv.Itoa(reminderNewValue.P_idToDo)
