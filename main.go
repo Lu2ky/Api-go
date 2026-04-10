@@ -167,7 +167,6 @@ func registerV1Routes(router gin.IRouter) {
 
 		// Notifications and emails
 		protected.GET("/notifications/users/:id", GetNotificaciones)
-		protected.POST("/notifications", addNotificacion)
 
 		// User configuration
 		protected.GET("/users/:id", GetUserInfo)
@@ -179,6 +178,7 @@ func registerV1Routes(router gin.IRouter) {
 	}
 
 	// Notifications and emails
+	router.POST("/notifications", addNotificacion)
 	router.POST("/notifications/delete", deleteNotifications)
 	router.POST("/emails", addCorreo)
 
