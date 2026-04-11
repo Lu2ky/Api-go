@@ -97,10 +97,10 @@ type OfficialSchedule struct {
 	FechaFinal             string          `json:"FechaFinal"`
 }
 type PersonalSchedule struct {
-	N_iduser    int            `json:"N_iduser"`
-	N_idcourse  int            `json:"N_idcourse"`
-	Activity    string         `json:"Activity"`
-	Tag         string         `json:"Tag"`
+	N_iduser   int    `json:"N_iduser"`
+	N_idcourse int    `json:"N_idcourse"`
+	Activity   string `json:"Activity"`
+	//Tag         string         `json:"Tag"`
 	Description sql.NullString `json:"Description"`
 	Dt_Start    sql.NullString `json:"Dt_Start"`
 	Dt_End      sql.NullString `json:"Dt_End"`
@@ -131,16 +131,16 @@ type forDeleteOrRecoveryPersonalSchedule struct {
 	CodUsuario         *string `json:"codUsuario"`
 }
 type NewPersonalActivity struct {
-	P_usuario     int     `json:"P_usuario"`
-	P_nombreCurso string  `json:"P_nombreCurso"`
-	P_descripcion string  `json:"P_descripcion"`
-	P_fechaInicio string  `json:"P_fechaInicio"`
-	P_fechaFin    string  `json:"P_fechaFin"`
-	P_dia         int     `json:"P_dia"`
-	P_horaInicio  string  `json:"P_horaInicio"`
-	P_horaFin     string  `json:"P_horaFin"`
-	P_periodo     int     `json:"P_periodo"`
-	CodUsuario    *string `json:"codUsuario"`
+	P_usuario     int    `json:"P_usuario"`
+	P_nombreCurso string `json:"P_nombreCurso"`
+	P_descripcion string `json:"P_descripcion"`
+	P_fechaInicio string `json:"P_fechaInicio"`
+	P_fechaFin    string `json:"P_fechaFin"`
+	P_dia         int    `json:"P_dia"`
+	P_horaInicio  string `json:"P_horaInicio"`
+	P_horaFin     string `json:"P_horaFin"`
+	//P_periodo     int     `json:"P_periodo"`
+	CodUsuario *string `json:"codUsuario"`
 }
 type EditPersonalActivity struct {
 	P_idCurso     int     `json:"P_idCurso"`

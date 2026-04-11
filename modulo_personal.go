@@ -55,9 +55,11 @@ func getPersonalScheduleByUserId(c *gin.Context) {
 	var perschedules []PersonalSchedule
 	for rows.Next() {
 		var perschedule PersonalSchedule
-		err := rows.Scan(&perschedule.N_iduser,
+		err := rows.Scan(
+			&perschedule.N_iduser,
 			&perschedule.N_idcourse,
-			&perschedule.Activity, &perschedule.Tag,
+			&perschedule.Activity,
+			//&perschedule.Tag,
 			&perschedule.Description,
 			&perschedule.Dt_Start,
 			&perschedule.Dt_End,
@@ -461,7 +463,7 @@ func addPersonalActivity(c *gin.Context) {
 	}
 
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("CALL crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	result, err := db.Exec("CALL crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?)",
 		personalNewValue.P_usuario,
 		personalNewValue.P_nombreCurso,
 		personalNewValue.P_descripcion,
@@ -470,7 +472,7 @@ func addPersonalActivity(c *gin.Context) {
 		personalNewValue.P_dia,
 		personalNewValue.P_horaInicio,
 		personalNewValue.P_horaFin,
-		personalNewValue.P_periodo,
+		//personalNewValue.P_periodo,
 	)
 
 	if err != nil {
@@ -486,71 +488,6 @@ func addPersonalActivity(c *gin.Context) {
 		return
 	}
 
-	/*
-		tx, err := db.Begin()
-		if err != nil {
-			log.Printf("Transaction error: %v", err)
-			c.JSON(500, gin.H{"error": "Internal server error"})
-			return
-		}
-		result0, err0 := tx.Exec(
-			"INSERT INTO Cursos (T_nombre, N_idEtiqueta, T_descripcion) VALUES (?, ?, ?);",
-			reminderNewValue.Activity,
-			reminderNewValue.IdTag,
-			reminderNewValue.Description,
-		)
-		idCurso, _ := result0.LastInsertId()
-
-		if err0 != nil {
-			tx.Rollback()
-			log.Printf("Database error: %v", err0)
-			c.JSON(500, gin.H{"error": "Error en primer query"})
-			return
-		}
-		result1, err1 := tx.Exec(
-			"INSERT INTO dias_clase(N_dia, TM_horaInicio, TM_horaFin) VALUES (?, ?, ?)",
-			reminderNewValue.Day,
-			reminderNewValue.StartHour,
-			reminderNewValue.EndHour,
-		)
-		nIdDias, _ := result1.LastInsertId()
-		if err1 != nil {
-			tx.Rollback()
-			log.Printf("Database error: %v", err1)
-			c.JSON(500, gin.H{"error": "Error en segunda query"})
-			return
-		}
-
-		_, err = tx.Exec(
-			"INSERT INTO Materia_has_dias_clase(N_idCurso, N_idDiasClase) VALUES (?, ?);",
-			idCurso,
-			nIdDias,
-		)
-		if err != nil {
-			tx.Rollback()
-			log.Printf("Database error: %v", err)
-			c.JSON(500, gin.H{"error": "Error en tercer query"})
-			return
-		}
-		_, err = tx.Exec(
-			"INSERT INTO horario (N_idUsuario, N_idCurso, N_idPeriodoAcademico) VALUES (?, ?,?);",
-			reminderNewValue.N_iduser,
-			idCurso,
-			reminderNewValue.Id_AcademicPeriod)
-		if err != nil {
-			tx.Rollback()
-			log.Printf("Database error: %v", err)
-			c.JSON(500, gin.H{"error": "Error en cuarto query"})
-			return
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			log.Printf("Commit error: %v", err)
-			c.JSON(500, gin.H{"error": "Internal server error"})
-			return
-		}
-	*/
 	descripcion := "Se creó actividad personal: " + personalNewValue.P_nombreCurso
 
 	insertarLog(
