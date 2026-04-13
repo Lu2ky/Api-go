@@ -137,6 +137,34 @@ func (j JWTManager) Validate(tokenStr string) (*Claims, error) {
 	return claims, nil
 }
 
+func (j JWTManager) validateTokenPublic(c *gin.Context) {
+
+	authHeader := c.GetHeader("Authorization")
+
+	if authHeader == "" {
+		c.JSON(401, gin.H{"status": false, "error": "Se requiere autenticación"})
+		return
+	}
+
+	tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+
+	// Validar el token
+
+	_, err := j.Validate(tokenStr)
+
+	if err != nil {
+		fmt.Printf("Error de validación: %v\n", err)
+		c.JSON(401, gin.H{
+			"status": false, "error": "Token no autorizado",
+		})
+		return
+	} else {
+		c.JSON(200, gin.H{
+			"status": true, "error": nil,
+		})
+	}
+}
+
 func dialLDAPS() (*ldap.Conn, error) {
 	return ldap.DialURL("ldaps://"+os.Getenv("LDAP_ADDR")+":636",
 		ldap.DialWithTLSConfig(&tls.Config{

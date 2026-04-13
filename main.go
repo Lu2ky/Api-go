@@ -169,13 +169,15 @@ func registerV1Routes(router gin.IRouter) {
 		protected.GET("/notifications/users/:id", GetNotificaciones)
 
 		// User configuration
-		protected.GET("/users/:id", GetUserInfo)
 		protected.POST("/notifications/mute", muteNotification)
 
 		// Paleta de colores
 		protected.POST("/palette", receivePaletteData)
 		protected.POST("/palette/get", getPalette)
 	}
+
+	// User configuration
+	router.GET("/users/:id", GetUserInfo)
 
 	// Notifications and emails
 	router.POST("/notifications", addNotificacion)
@@ -191,6 +193,7 @@ func registerV1Routes(router gin.IRouter) {
 	router.POST("/auth/users", createUser)
 	router.POST("/auth/admins", createAdmin)
 	router.POST("/auth/change-password", changeusrpasswd)
+	router.GET("/auth/token", autho.validateTokenPublic)
 
 	// Tokens
 	router.POST("/tokens", receiveTokenData)
