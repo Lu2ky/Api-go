@@ -462,8 +462,10 @@ func addPersonalActivity(c *gin.Context) {
 		fmt.Printf("\nNo se encontró registro relacionado")
 	}
 
+	var newActId int
+
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("CALL crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?)",
+	err = db.QueryRow("SELECT crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?)",
 		personalNewValue.P_usuario,
 		personalNewValue.P_nombreCurso,
 		personalNewValue.P_descripcion,
@@ -473,21 +475,21 @@ func addPersonalActivity(c *gin.Context) {
 		personalNewValue.P_horaInicio,
 		personalNewValue.P_horaFin,
 		//personalNewValue.P_periodo,
-	)
+	).Scan(&newActId)
 
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
+	/*
+		rowsAffected, _ := result.RowsAffected()
 
-	rowsAffected, _ := result.RowsAffected()
-
-	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
-		return
-	}
-
+		if rowsAffected == 0 {
+			c.JSON(404, gin.H{"error": "Personal schedule not found"})
+			return
+		}
+	*/
 	descripcion := "Se creó actividad personal: " + personalNewValue.P_nombreCurso
 
 	insertarLog(
@@ -496,7 +498,8 @@ func addPersonalActivity(c *gin.Context) {
 		descripcion,
 	)
 	c.JSON(200, gin.H{
-		"message": "Actividad creada correctamente",
+		"message":      "Actividad creada correctamente",
+		"new_activity": newActId,
 	})
 }
 
