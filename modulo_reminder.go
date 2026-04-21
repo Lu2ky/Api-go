@@ -545,7 +545,7 @@ func deleteMultipleReminder(c *gin.Context) {
 	}
 
 	// Log
-	descripcion := fmt.Sprintf("Se eliminaron los recordatorios | IDs: %d | Usuario ID: %d",
+	descripcion := fmt.Sprintf("Se eliminaron los recordatorios | IDs: %s | Usuario ID: %d",
 		delReminder.N_idRecordatorios, delReminder.P_usuario)
 
 	go func(uID int, acc, desc string) {

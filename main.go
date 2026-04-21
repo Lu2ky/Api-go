@@ -174,6 +174,9 @@ func registerV1Routes(router gin.IRouter) {
 		// Paleta de colores
 		protected.POST("/palette", receivePaletteData)
 		protected.POST("/palette/get", getPalette)
+
+		// Logs
+		protected.POST("/logs", insertLog)
 	}
 
 	// User configuration

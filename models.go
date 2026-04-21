@@ -333,3 +333,9 @@ type Onboarding struct {
 	UserId string `json:"userId"`
 	Status string `json:"status"`
 }
+
+type Log struct {
+	N_idUsuario int    `json:"N_idUsuario"`
+	Accion      string `json:"accion"`
+	Descripcion string `json:"descripcion"`
+}
