@@ -154,7 +154,6 @@ type EditPersonalActivity struct {
 	P_horaInicio  string  `json:"P_horaInicio"`
 	P_horaFin     string  `json:"P_horaFin"`
 	CodUsuario    *string `json:"codUsuario"`
-	N_idUsuario   int     `json:"N_idUsuario"`
 }
 type ofcComments struct {
 	N_idHorario     int           `json:"N_idHorario"`
@@ -335,7 +334,7 @@ type Onboarding struct {
 }
 
 type Log struct {
-	N_idUsuario int    `json:"N_idUsuario"`
-	Accion      string `json:"accion"`
-	Descripcion string `json:"descripcion"`
+	CodUsuario  *string `json:"codUsuario"`
+	Accion      string  `json:"accion"`
+	Descripcion string  `json:"descripcion"`
 }

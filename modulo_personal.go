@@ -184,14 +184,14 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 	descripcion := fmt.Sprintf("Se actualizó actividad personal | ID: %d | Usuario ID: %d",
 		personalNewValue.P_idCurso, personalNewValue.P_idCurso)
 
-	go func(uID int, acc, desc string) {
+	go func(uID string, acc, desc string) {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
 			}
 		}()
-		insertarLog(uID, acc, desc)
-	}(personalNewValue.N_idUsuario, "UPDATE_ACTIVIDAD_PERSONAL", descripcion)
+		insertLogCod(uID, acc, desc)
+	}(*personalNewValue.CodUsuario, "UPDATE_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message": "Actividad actualizada correctamente",
@@ -258,14 +258,14 @@ func updateNameOfPersonalScheduleByIdCourse(c *gin.Context) {
 	descripcion := fmt.Sprintf("Se actualizó NOMBRE de actividad personal | ID: %d | Usuario ID: %d",
 		newValue.IdPersonalSchedule, newValue.N_idUsuario)
 
-	go func(uID int, acc, desc string) {
+	go func(uID string, acc, desc string) {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
 			}
 		}()
-		insertarLog(uID, acc, desc)
-	}(newValue.N_idUsuario, "UPDATE_NOMBRE_ACTIVIDAD_PERSONAL", descripcion)
+		insertLogCod(uID, acc, desc)
+	}(*newValue.CodUsuario, "UPDATE_NOMBRE_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -310,14 +310,14 @@ func updateDescriptionOfPersonalScheduleByIdCourse(c *gin.Context) {
 	descripcion := fmt.Sprintf("Se actualizó DESCRIPCIÓN de actividad personal | ID: %d | Usuario ID: %d",
 		newValue.IdPersonalSchedule, newValue.N_idUsuario)
 
-	go func(uID int, acc, desc string) {
+	go func(uID string, acc, desc string) {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
 			}
 		}()
-		insertarLog(uID, acc, desc)
-	}(newValue.N_idUsuario, "UPDATE_DESCRIPCION_ACTIVIDAD_PERSONAL", descripcion)
+		insertLogCod(uID, acc, desc)
+	}(*newValue.CodUsuario, "UPDATE_DESCRIPCION_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -362,14 +362,14 @@ func updateStartHourOfPersonalScheduleByIdCourse(c *gin.Context) {
 	descripcion := fmt.Sprintf("Se actualizó HORA INICIO de actividad personal | ID: %d | Usuario ID: %d",
 		newValue.IdPersonalSchedule, newValue.N_idUsuario)
 
-	go func(uID int, acc, desc string) {
+	go func(uID string, acc, desc string) {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
 			}
 		}()
-		insertarLog(uID, acc, desc)
-	}(newValue.N_idUsuario, "UPDATE_HORA_INICIO_ACTIVIDAD_PERSONAL", descripcion)
+		insertLogCod(uID, acc, desc)
+	}(*newValue.CodUsuario, "UPDATE_HORA_INICIO_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -414,14 +414,14 @@ func updateEndHourOfPersonalScheduleByIdCourse(c *gin.Context) {
 	descripcion := fmt.Sprintf("Se actualizó HORA FIN de actividad personal | ID: %d | Usuario ID: %d",
 		newValue.IdPersonalSchedule, newValue.N_idUsuario)
 
-	go func(uID int, acc, desc string) {
+	go func(uID string, acc, desc string) {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
 			}
 		}()
-		insertarLog(uID, acc, desc)
-	}(newValue.N_idUsuario, "UPDATE_HORA_FIN_ACTIVIDAD_PERSONAL", descripcion)
+		insertLogCod(uID, acc, desc)
+	}(*newValue.CodUsuario, "UPDATE_HORA_FIN_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -468,14 +468,14 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 	descripcion := fmt.Sprintf("Se eliminó actividad personal | ID: %d | Usuario ID: %d",
 		deleteValue.IdPersonalSchedule, deleteValue.N_idUsuario)
 
-	go func(uID int, acc, desc string) {
+	go func(uID string, acc, desc string) {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
 			}
 		}()
-		insertarLog(uID, acc, desc)
-	}(deleteValue.N_idUsuario, "DELETE_ACTIVIDAD_PERSONAL", descripcion)
+		insertLogCod(uID, acc, desc)
+	}(*deleteValue.CodUsuario, "DELETE_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
