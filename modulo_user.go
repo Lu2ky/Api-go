@@ -164,6 +164,19 @@ func getToken(c *gin.Context) {
 		return
 	}
 
+	// Log
+	userID, err := strconv.Atoi(req.UserId)
+	descripcion := fmt.Sprintf("Se validó el token | Usuario ID: %s", req.UserId)
+
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(userID, "VALIDATE_TOKEN", descripcion)
+
 	c.JSON(200, gin.H{"userId": req.UserId})
 }
 

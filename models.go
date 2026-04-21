@@ -125,10 +125,12 @@ type PersonalScheduleNewValue struct {
 	NewActivityValue   string  `json:"NewActivityValue" binding:"required"`
 	IdPersonalSchedule int     `json:"IdPersonalSchedule" binding:"required"`
 	CodUsuario         *string `json:"codUsuario"`
+	N_idUsuario        int     `json:"N_idUsuario"`
 }
 type forDeleteOrRecoveryPersonalSchedule struct {
 	IdPersonalSchedule int     `json:"IdPersonalSchedule" binding:"required"`
 	CodUsuario         *string `json:"codUsuario"`
+	N_idUsuario        int     `json:"N_idUsuario"`
 }
 type NewPersonalActivity struct {
 	P_usuario     int    `json:"P_usuario"`
@@ -152,6 +154,7 @@ type EditPersonalActivity struct {
 	P_horaInicio  string  `json:"P_horaInicio"`
 	P_horaFin     string  `json:"P_horaFin"`
 	CodUsuario    *string `json:"codUsuario"`
+	N_idUsuario   int     `json:"N_idUsuario"`
 }
 type ofcComments struct {
 	N_idHorario     int           `json:"N_idHorario"`

@@ -417,9 +417,17 @@ func updateReminderById(c *gin.Context) {
 	}
 
 	// Log
-	descripcion := "Se actualizó recordatorio ID: " + strconv.Itoa(reminderNewValue.P_idToDo)
+	descripcion := fmt.Sprintf("Se actualizó recordatorio | ID_TO_DO: %d | Usuario ID: %d",
+		reminderNewValue.P_idToDo, reminderNewValue.P_usuario)
 
-	insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(reminderNewValue.P_usuario, "UPDATE_RECORDATORIO", descripcion)
 
 	// Salida
 	c.JSON(200, gin.H{
@@ -476,7 +484,7 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
-	descripcion := "Se eliminó/recuperó recordatorio ID: " +
+	descripcion := "Se eliminó recordatorio ID: " +
 		strconv.Itoa(delReminder.N_idRecordatorio) +
 		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
 
@@ -528,19 +536,27 @@ func deleteMultipleReminder(c *gin.Context) {
 	// Llamado al procedimiento
 	result, err := db.Exec("CALL eliminar_recordatorios_multiple(?)", delReminder.N_idRecordatorios)
 
+	rowsAffected, _ := result.RowsAffected()
+
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	descripcion := "Se eliminaron los recordatorios ID: " +
-		delReminder.N_idRecordatorios +
-		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
+	// Log
+	descripcion := fmt.Sprintf("Se eliminaron los recordatorios | IDs: %d | Usuario ID: %d",
+		delReminder.N_idRecordatorios, delReminder.P_usuario)
 
-	insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(delReminder.P_usuario, "DELETE_MULTIPLES_RECORDATORIOS", descripcion)
 
-	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",
 		"rowsAffected": rowsAffected,
