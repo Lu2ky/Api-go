@@ -126,15 +126,18 @@ func receiveTokenData(c *gin.Context) {
 		return
 	}
 
-	userID, err := strconv.Atoi(data.UserId)
+	// Log
+	descripcion := fmt.Sprintf("Token guardado en Redis | Usuario ID: %s", data.UserId)
 
-	descripcion := "Token guardado en Redis | Usuario: " + data.UserId
+	go func(uID string, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertLogCod(uID, acc, desc)
+	}(data.UserId, "GUARDAR_TOKEN", descripcion)
 
-	insertarLog(
-		userID,
-		"GUARDAR_TOKEN",
-		descripcion,
-	)
 	// Respuesta exitosa
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
@@ -175,7 +178,7 @@ func getToken(c *gin.Context) {
 			}
 		}()
 		insertarLog(uID, acc, desc)
-	}(userID, "VALIDATE_TOKEN", descripcion)
+	}(userID, "VALIDAR_TOKEN", descripcion)
 
 	c.JSON(200, gin.H{"userId": req.UserId})
 }
