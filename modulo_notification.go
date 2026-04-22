@@ -187,8 +187,6 @@ func deleteNotifications(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt("userID")
-
 	// Borrar registro de notificaciones de redis
 	deleted, err2 := rdb.Del(ctx, "Notifications:"+*idsNotifications.CodUsuario).Result()
 
@@ -219,11 +217,24 @@ func deleteNotifications(c *gin.Context) {
 		return
 	}
 
-	descripcion := "Notificaciones eliminadas | IDs: " +
-		idsNotifications.Ids +
-		" | Usuario ID: " + strconv.Itoa(userID)
+	// Log
+	var userId int
+	err4 := db.QueryRow("CALL get_id_tabla(?)", *idsNotifications.CodUsuario).Scan(&userId)
+	if err4 != nil {
+		log.Printf("Error obteniendo ID: %v", err)
+	}
 
-	insertarLog(userID, "ELIMINAR_NOTIFICACIONES", descripcion)
+	descripcion := fmt.Sprintf("Se eliminaron los recordatorios | IDs: %s | Usuario ID: %d",
+		idsNotifications.Ids, userId)
+
+	go func(uID string, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertLogCod(uID, acc, desc)
+	}(*idsNotifications.CodUsuario, "ELIMINAR_NOTIFICACIONES", descripcion)
 
 	c.JSON(200, gin.H{
 		"message": "Notificaciones eliminadas correctamente",

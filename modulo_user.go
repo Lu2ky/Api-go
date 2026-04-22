@@ -239,6 +239,7 @@ func getPalette(c *gin.Context) {
 		return
 	}
 
+	// Salida
 	c.JSON(200, gin.H{
 		"userId":  req.UserId,
 		"palette": val,

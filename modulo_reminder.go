@@ -324,21 +324,6 @@ func updateReminderById(c *gin.Context) {
 		return
 	}
 
-	/*
-		type EditReminder struct {
-			P_idToDo		int				`json:"P_idToDo"`
-			P_nombre		sql.NullString			`json:"P_nombre"`
-			P_descripcion	sql.NullString			`json:"P_descripcion"`
-			P_fecha			sql.NullString			`json:"P_fecha"`
-			P_prioridad		sql.NullInt64 	`json:"P_prioridad"`
-			P_tag1			string	`json:"P_tag1"`
-			P_tag2			string	`json:"P_tag2"`
-			P_tag3			string	`json:"P_tag3"`
-			P_tag4			string	`json:"P_tag4"`
-			P_tag5			string	`json:"P_tag5"`
-		}
-	*/
-
 	// Borrar registro de recordatorios de usuario de redis
 	deleted, err2 := rdb.Del(ctx, "Reminders:"+*reminderNewValue.CodUsuario).Result()
 
@@ -488,7 +473,7 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		strconv.Itoa(delReminder.N_idRecordatorio) +
 		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
 
-	insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
+	insertarLog(delReminder.P_usuario, "ELIMINAR_RECORDATORIO", descripcion)
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
@@ -555,7 +540,7 @@ func deleteMultipleReminder(c *gin.Context) {
 			}
 		}()
 		insertarLog(uID, acc, desc)
-	}(delReminder.P_usuario, "DELETE_MULTIPLES_RECORDATORIOS", descripcion)
+	}(delReminder.P_usuario, "ELIMINAR_MULTIPLES_RECORDATORIOS", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",

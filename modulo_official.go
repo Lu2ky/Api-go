@@ -498,9 +498,9 @@ func deleteAcademicPeriod(c *gin.Context) {
 	descripcion := "Se eliminó un periodo académico: " +
 		" | ID: " + strconv.Itoa(newAcademicPeriodValue.N_idUsuario)
 
-	insertarLog(newAcademicPeriodValue.N_idUsuario, "AGREGAR PERIODO ACADEMICO", descripcion)
+	insertarLog(newAcademicPeriodValue.N_idUsuario, "ELIMINAR PERIODO ACADEMICO", descripcion)
 	c.JSON(200, gin.H{
-		"message": "Horario importado correctamente",
+		"message": "Periodo academico borrado correctamente",
 	})
 
 }

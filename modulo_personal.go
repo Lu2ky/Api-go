@@ -181,8 +181,14 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 	}
 
 	// Log
+	var userId int
+	err4 := db.QueryRow("CALL get_id_tabla(?)", *personalNewValue.CodUsuario).Scan(&userId)
+	if err4 != nil {
+		log.Printf("Error obteniendo ID: %v", err)
+	}
+
 	descripcion := fmt.Sprintf("Se actualizó actividad personal | ID: %d | Usuario ID: %d",
-		personalNewValue.P_idCurso, personalNewValue.P_idCurso)
+		personalNewValue.P_idCurso, userId)
 
 	go func(uID string, acc, desc string) {
 		defer func() {
@@ -191,7 +197,7 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 			}
 		}()
 		insertLogCod(uID, acc, desc)
-	}(*personalNewValue.CodUsuario, "UPDATE_ACTIVIDAD_PERSONAL", descripcion)
+	}(*personalNewValue.CodUsuario, "ACTUALIZAR_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message": "Actividad actualizada correctamente",
@@ -265,7 +271,7 @@ func updateNameOfPersonalScheduleByIdCourse(c *gin.Context) {
 			}
 		}()
 		insertLogCod(uID, acc, desc)
-	}(*newValue.CodUsuario, "UPDATE_NOMBRE_ACTIVIDAD_PERSONAL", descripcion)
+	}(*newValue.CodUsuario, "ACTUALIZAR_NOMBRE_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -317,7 +323,7 @@ func updateDescriptionOfPersonalScheduleByIdCourse(c *gin.Context) {
 			}
 		}()
 		insertLogCod(uID, acc, desc)
-	}(*newValue.CodUsuario, "UPDATE_DESCRIPCION_ACTIVIDAD_PERSONAL", descripcion)
+	}(*newValue.CodUsuario, "ACTUALIZAR_DESCRIPCION_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -369,7 +375,7 @@ func updateStartHourOfPersonalScheduleByIdCourse(c *gin.Context) {
 			}
 		}()
 		insertLogCod(uID, acc, desc)
-	}(*newValue.CodUsuario, "UPDATE_HORA_INICIO_ACTIVIDAD_PERSONAL", descripcion)
+	}(*newValue.CodUsuario, "ACTUALIZAR_HORA_INICIO_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -421,7 +427,7 @@ func updateEndHourOfPersonalScheduleByIdCourse(c *gin.Context) {
 			}
 		}()
 		insertLogCod(uID, acc, desc)
-	}(*newValue.CodUsuario, "UPDATE_HORA_FIN_ACTIVIDAD_PERSONAL", descripcion)
+	}(*newValue.CodUsuario, "ACTUALIZAR_HORA_FIN_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -475,7 +481,7 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 			}
 		}()
 		insertLogCod(uID, acc, desc)
-	}(*deleteValue.CodUsuario, "DELETE_ACTIVIDAD_PERSONAL", descripcion)
+	}(*deleteValue.CodUsuario, "ELIMINAR_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -552,7 +558,7 @@ func addPersonalActivity(c *gin.Context) {
 
 	insertarLog(
 		personalNewValue.P_usuario,
-		"INSERT_ACTIVIDAD_PERSONAL",
+		"CREAR_ACTIVIDAD_PERSONAL",
 		descripcion,
 	)
 	c.JSON(200, gin.H{
