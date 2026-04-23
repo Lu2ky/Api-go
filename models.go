@@ -301,7 +301,7 @@ type ImportSchedule struct {
 	Nrc              string  `json:"nrc"`
 	NombreCurso      string  `json:"nombreCurso"`
 	Docente          string  `json:"docente"`
-	Creditos         float32 `json:"creditos"`
+	Creditos         float64 `json:"creditos"`
 	ModoCalificar    string  `json:"modoCalificar"`
 	Campus           string  `json:"campus"`
 	TipoCurso        string  `json:"tipoCurso"`
