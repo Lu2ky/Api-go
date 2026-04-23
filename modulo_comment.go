@@ -179,6 +179,11 @@ func addPersonalComment(c *gin.Context) {
 		return
 	}
 
+	if AuthorityCheck(*newComment.CodUsuario, c) == false {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
+
 	// Borrar registro de recordatorios de usuario de redis
 	deleted, err2 := rdb.Del(ctx, "PersonalComments:"+*newComment.CodUsuario).Result()
 
@@ -251,6 +256,11 @@ func updatePersonalComment(c *gin.Context) {
 		return
 	}
 
+	if AuthorityCheck(*newComment.CodUsuario, c) == false {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
+
 	// Borrar registro de recordatorios de usuario de redis
 	deleted, err2 := rdb.Del(ctx, "PersonalComments:"+*newComment.CodUsuario).Result()
 
@@ -312,6 +322,10 @@ func deletePersonalComment(c *gin.Context) {
 	err := c.BindJSON(&delComment)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+	if AuthorityCheck(*delComment.CodUsuario, c) == false {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
 		return
 	}
 

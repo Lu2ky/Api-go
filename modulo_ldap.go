@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -51,6 +52,57 @@ func (j JWTManager) AuthMiddleware() gin.HandlerFunc {
 		// El token es válido, continúa hacia la ruta solicitada
 		c.Next()
 	}
+}
+
+func RoleMiddleware(requiredRole string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Extraemos lo que guardó el AuthMiddleware
+		val, exists := c.Get("user_claims")
+
+		if !exists {
+			c.AbortWithStatusJSON(401, gin.H{"error": "Autenticación requerida"})
+			return
+		}
+
+		claims := val.(*Claims)
+
+		// Buscamos si el rol requerido está en la lista del usuario
+		hasRole := slices.Contains(claims.Roles, requiredRole)
+
+		if !hasRole {
+			c.AbortWithStatusJSON(403, gin.H{"error": "Autorización requerida"})
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func UserGetMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		var userCode string = c.Param("id")
+
+		if AuthorityCheck(userCode, c) == false {
+			c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func AuthorityCheck(userCode string, c *gin.Context) bool {
+
+	val, exists := c.Get("user_claims")
+	claims := val.(*Claims)
+
+	if !exists || claims.UserID != userCode {
+
+		return false
+	}
+
+	return true
 }
 
 func Auth(c *gin.Context) {

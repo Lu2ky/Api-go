@@ -1,15 +1,15 @@
 package main
+
 import (
 	"log"
 )
-
 
 func insertarLog(usuarioID int, accion string, descripcion string) {
 	var query string
 	var args []interface{}
 
 	if usuarioID == 0 {
-		
+
 		query = `
 		INSERT INTO Logs (T_accion, T_Descripcion, Dt_fecha)
 		VALUES (?, ?, NOW())

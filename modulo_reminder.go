@@ -225,6 +225,11 @@ func addReminder(c *gin.Context) {
 		return
 	}
 
+	if !AuthorityCheck(*reminderNewValue.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
+
 	// Borrar registro de recordatorios de usuario de redis
 	deleted, err2 := rdb.Del(ctx, "Reminders:"+*reminderNewValue.CodUsuario).Result()
 
@@ -321,6 +326,10 @@ func updateReminderById(c *gin.Context) {
 	err := c.BindJSON(&reminderNewValue)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+	if !AuthorityCheck(*reminderNewValue.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
 		return
 	}
 
@@ -444,6 +453,10 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "usuario requerido"})
 		return
 	}
+	if !AuthorityCheck(*delReminder.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
 
 	// Borrar registro de recordatorios de usuario de redis
 	deleted, err2 := rdb.Del(ctx, "Reminders:"+*delReminder.CodUsuario).Result()
@@ -499,6 +512,10 @@ func deleteMultipleReminder(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+	if !AuthorityCheck(*delReminder.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
 		return
 	}
 

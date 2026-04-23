@@ -19,8 +19,8 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
-	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	err := godotenv.Load() // Load enviorement variables
+	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	//err := godotenv.Load() // Load enviorement variables
 
 	if err != nil {
 		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
@@ -58,9 +58,9 @@ func main() {
 	v1 := router.Group("/api/v1")
 	registerV1Routes(v1)
 
-	router.Run("0.0.0.0:8080") // The port number for expone the API
+	//router.Run("0.0.0.0:8080") // The port number for expone the API
 
-	//router.Run(":8080")
+	router.Run(":8080")
 }
 
 func registerLegacyRoutes(router gin.IRoutes) {
@@ -127,53 +127,53 @@ func registerV1Routes(router gin.IRouter) {
 	{
 		// Official schedules
 		protected.GET("/course-types", GetTiposCurso)
-		protected.GET("/schedules/official/users/:id", getOfficialScheduleByUserId)
+		protected.GET("/schedules/official/users/:id", UserGetMiddleware(), getOfficialScheduleByUserId)
 		protected.POST("/schedules/activities/times", getActivitiesTimesData)
 
 		// Schedule import
-		protected.POST("/schedules/import", importSchedule)
+		protected.POST("/schedules/import", RoleMiddleware(os.Getenv("ROLE_ADM")), importSchedule)
 
 		//	Academic periods
 		protected.GET("/academic-periods", getAcademicPeriods)
-		protected.POST("/academic-periods/insert", addAcademicPeriod)
-		protected.POST("/academic-periods/update", updateAcademicPeriod)
-		protected.POST("/academic-periods/delete", deleteAcademicPeriod)
+		protected.POST("/academic-periods/insert", RoleMiddleware(os.Getenv("ROLE_ADM")), addAcademicPeriod)
+		protected.POST("/academic-periods/update", RoleMiddleware(os.Getenv("ROLE_ADM")), updateAcademicPeriod)
+		protected.POST("/academic-periods/delete", RoleMiddleware(os.Getenv("ROLE_ADM")), deleteAcademicPeriod)
 
 		// Personal comments
-		protected.GET("/comments/personal/users/:id", getPersonalCommentsByUserId)
-		protected.GET("/comments/personal/users/:id/courses/:idCourse", getPersonalCommentsByUserIdAndCourseId)
-		protected.POST("/comments/personal", addPersonalComment)
-		protected.POST("/comments/personal/update", updatePersonalComment)
-		protected.POST("/comments/personal/delete", deletePersonalComment)
+		protected.GET("/comments/personal/users/:id", UserGetMiddleware(), getPersonalCommentsByUserId)
+		protected.GET("/comments/personal/users/:id/courses/:idCourse", UserGetMiddleware(), getPersonalCommentsByUserIdAndCourseId)
+		protected.POST("/comments/personal", addPersonalComment)           //Has userCode validation
+		protected.POST("/comments/personal/update", updatePersonalComment) //Has userCode validation
+		protected.POST("/comments/personal/delete", deletePersonalComment) //Has userCode validation
 
 		// Personal schedules
-		protected.GET("/schedules/personal/users/:id", getPersonalScheduleByUserId)
-		protected.POST("/schedules/personal", addPersonalActivity)
-		protected.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)
-		protected.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse)
+		protected.GET("/schedules/personal/users/:id", UserGetMiddleware(), getPersonalScheduleByUserId)
+		protected.POST("/schedules/personal", addPersonalActivity)                                          //Has userCode validation
+		protected.POST("/schedules/personal/update", updatePersonalScheduleByIdCourse)                      //Has userCode validation
+		protected.POST("/schedules/personal/delete-or-recover", deleteOrRecoveryPersonalScheduleByIdCourse) //Has userCode validation
 
 		// Tags
-		protected.GET("/tags/users/:id", GetTagsByUserId)
-		protected.GET("/tags/users/:id/reminders/:reminderId", GetTagsByUserIdAndReminderId)
-		protected.POST("/tags/delete", deleteTag)
+		protected.GET("/tags/users/:id", UserGetMiddleware(), GetTagsByUserId)
+		protected.GET("/tags/users/:id/reminders/:reminderId", UserGetMiddleware(), GetTagsByUserIdAndReminderId)
+		protected.POST("/tags/delete", deleteTag) //Has userCode validation
 
 		// Reminders
-		protected.GET("/reminders/users/:id", GetRemindersByUserId)
-		protected.GET("/reminders/users/:id/tags", GetRemindersTagsByUserId)
-		protected.POST("/reminders", addReminder)
-		protected.POST("/reminders/update", updateReminderById)
-		protected.POST("/reminders/delete-or-recover", deleteOrRecoverReminder)
-		protected.POST("/reminders/delete/multiple", deleteMultipleReminder)
+		protected.GET("/reminders/users/:id", UserGetMiddleware(), GetRemindersByUserId)
+		protected.GET("/reminders/users/:id/tags", UserGetMiddleware(), GetRemindersTagsByUserId)
+		protected.POST("/reminders", addReminder)                               //Has userCode validation
+		protected.POST("/reminders/update", updateReminderById)                 //Has userCode validation
+		protected.POST("/reminders/delete-or-recover", deleteOrRecoverReminder) //Has userCode validation
+		protected.POST("/reminders/delete/multiple", deleteMultipleReminder)    //Has userCode validation
 
 		// Notifications and emails
-		protected.GET("/notifications/users/:id", GetNotificaciones)
+		protected.GET("/notifications/users/:id", UserGetMiddleware(), GetNotificaciones)
 
 		// User configuration
-		protected.POST("/notifications/mute", muteNotification)
+		protected.POST("/notifications/mute", muteNotification) //Has userCode validation
 
 		// Paleta de colores
-		protected.POST("/palette", receivePaletteData)
-		protected.POST("/palette/get", getPalette)
+		protected.POST("/palette", receivePaletteData) //TODO
+		protected.POST("/palette/get", getPalette)     //TODO
 	}
 
 	// User configuration
