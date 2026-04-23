@@ -26,8 +26,6 @@ func GetUserInfo(c *gin.Context) {
 
 		err := json.Unmarshal([]byte(val), &userDataArray)
 
-		fmt.Print(userDataArray)
-
 		if err == nil && len(userDataArray) > 0 {
 			c.JSON(200, userDataArray)
 			return
