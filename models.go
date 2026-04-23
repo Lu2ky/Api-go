@@ -294,22 +294,22 @@ type UserData struct {
 }
 
 type ImportSchedule struct {
-	Nombre           string `json:"nombre"`
-	Semestre         int    `json:"semestre"`
-	Programa         string `json:"programa"`
-	CodUsuario       string `json:"codUsuario"`
-	Nrc              string `json:"nrc"`
-	NombreCurso      string `json:"nombreCurso"`
-	Docente          string `json:"docente"`
-	Creditos         int    `json:"creditos"`
-	ModoCalificar    string `json:"modoCalificar"`
-	Campus           string `json:"campus"`
-	TipoCurso        string `json:"tipoCurso"`
-	Dia              int    `json:"dia"`
-	HoraInicio       string `json:"horaInicio"`
-	HoraFin          string `json:"horaFin"`
-	Salon            string `json:"salon"`
-	PeriodoAcademico string `json:"periodoAcademico"`
+	Nombre           string  `json:"nombre"`
+	Semestre         int     `json:"semestre"`
+	Programa         string  `json:"programa"`
+	CodUsuario       string  `json:"codUsuario"`
+	Nrc              string  `json:"nrc"`
+	NombreCurso      string  `json:"nombreCurso"`
+	Docente          string  `json:"docente"`
+	Creditos         float32 `json:"creditos"`
+	ModoCalificar    string  `json:"modoCalificar"`
+	Campus           string  `json:"campus"`
+	TipoCurso        string  `json:"tipoCurso"`
+	Dia              int     `json:"dia"`
+	HoraInicio       string  `json:"horaInicio"`
+	HoraFin          string  `json:"horaFin"`
+	Salon            string  `json:"salon"`
+	PeriodoAcademico string  `json:"periodoAcademico"`
 }
 
 type Token struct {
