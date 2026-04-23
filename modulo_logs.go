@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func insertarLog(usuarioID int, accion string, descripcion string) {
@@ -28,4 +30,41 @@ func insertarLog(usuarioID int, accion string, descripcion string) {
 	if err != nil {
 		log.Println("Error al insertar log:", err)
 	}
+}
+
+func insertLogCod(codUsuario string, accion string, descripcion string) {
+	var usuarioID int
+
+	err := db.QueryRow("CALL get_id_tabla(?)", codUsuario).Scan(&usuarioID)
+
+	if err != nil {
+		log.Printf("Error al obtener ID para el usuario %s: %v", codUsuario, err)
+		return
+	}
+
+	query := `
+        INSERT INTO Logs (N_idUsuario, T_accion, T_Descripcion, Dt_fecha)
+        VALUES (?, ?, ?, NOW())
+    `
+	args := []interface{}{usuarioID, accion, descripcion}
+
+	_, err = db.Exec(query, args...)
+	if err != nil {
+		log.Println("Error al insertar log final:", err)
+	}
+}
+
+func insertLog(c *gin.Context) {
+	var log Log
+
+	err := c.BindJSON(&log)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	// Llamamos a la función que hace el INSERT
+	insertLogCod(*log.CodUsuario, log.Accion, log.Descripcion)
+
+	c.JSON(200, gin.H{"status": "log insertado"})
 }

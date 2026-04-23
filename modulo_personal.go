@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -184,13 +183,26 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Personal schedule not found"})
 		return
 	}
-	descripcion := "Se actualizó actividad personal ID: " + strconv.Itoa(personalNewValue.P_idCurso)
 
-	insertarLog(
-		0,
-		"UPDATE_ACTIVIDAD_PERSONAL",
-		descripcion,
-	)
+	// Log
+	var userId int
+	err4 := db.QueryRow("CALL get_id_tabla(?)", *personalNewValue.CodUsuario).Scan(&userId)
+	if err4 != nil {
+		log.Printf("Error obteniendo ID: %v", err)
+	}
+
+	descripcion := fmt.Sprintf("Se actualizó actividad personal | ID: %d | Usuario ID: %d",
+		personalNewValue.P_idCurso, userId)
+
+	go func(uID string, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertLogCod(uID, acc, desc)
+	}(*personalNewValue.CodUsuario, "ACTUALIZAR_ACTIVIDAD_PERSONAL", descripcion)
+
 	c.JSON(200, gin.H{
 		"message": "Actividad actualizada correctamente",
 	})
@@ -235,9 +247,20 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Personal schedule not found"})
 		return
 	}
-	descripcion := "Se eliminó o recuperó actividad ID: " + strconv.Itoa(deleteValue.IdPersonalSchedule)
 
-	insertarLog(0, "DELETE_OR_RECOVERY_ACTIVIDAD", descripcion)
+	// Log
+	descripcion := fmt.Sprintf("Se eliminó actividad personal | ID: %d | Usuario ID: %d",
+		deleteValue.IdPersonalSchedule, deleteValue.N_idUsuario)
+
+	go func(uID string, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertLogCod(uID, acc, desc)
+	}(*deleteValue.CodUsuario, "ELIMINAR_ACTIVIDAD_PERSONAL", descripcion)
+
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
 		"rowsAffected": rowsAffected,
@@ -317,7 +340,7 @@ func addPersonalActivity(c *gin.Context) {
 
 	insertarLog(
 		personalNewValue.P_usuario,
-		"INSERT_ACTIVIDAD_PERSONAL",
+		"CREAR_ACTIVIDAD_PERSONAL",
 		descripcion,
 	)
 	c.JSON(200, gin.H{

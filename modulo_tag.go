@@ -235,7 +235,7 @@ func deleteTag(c *gin.Context) {
 		strconv.Itoa(delTag.N_idEtiqueta) +
 		" | Usuario ID: " + strconv.Itoa(delTag.P_usuario)
 
-	insertarLog(delTag.P_usuario, "DELETE_ETIQUETA", descripcion)
+	insertarLog(delTag.P_usuario, "ELIMINAR_ETIQUETA", descripcion)
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{

@@ -137,7 +137,7 @@ func Auth(c *gin.Context) {
 		strconv.Itoa(userID) +
 		" | Username: " + User.User
 
-	insertarLog(userID, "LOGIN", descripcion)
+	insertarLog(userID, "INICIAR_SESION", descripcion)
 	c.JSON(200, gin.H{
 		"Token":    token,
 		"UserAuth": userU,
@@ -403,29 +403,31 @@ func createAdmin(c *gin.Context) {
 		return
 	}
 
-	err := CreateLDAPAdminUser(
+	err2 := CreateLDAPAdminUser(
 		os.Getenv("ADMIN_LDAP_ADMIN"),
 		os.Getenv("ADMIN_LDAP_PASS"),
 		req.User,
 		req.Pass,
 	)
-	var userID int
 
-	err = db.QueryRow(
-		"SELECT N_idUsuario FROM Usuarios WHERE T_codUsuario = ?",
-		req.User,
-	).Scan(&userID)
+	// Log
 
-	if err != nil {
-		log.Println("Error obteniendo admin para log:", err)
-		userID = 0
+	uID, err2 := strconv.Atoi(req.User)
+	if err2 != nil {
+		log.Printf("Error: El usuario %s no es un ID numérico válido", req.User)
+		uID = 0
 	}
+	descripcion := fmt.Sprintf("Se creó administrador | ID: %s ",
+		req.User)
 
-	descripcion := "Se creó administrador | ID: " +
-		strconv.Itoa(userID) +
-		" | Username: " + req.User
-
-	insertarLog(userID, "CREAR_ADMIN", descripcion)
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(uID, "CREAR_ADMIN", descripcion)
 
 	c.JSON(200, gin.H{"message": "Admin creado correctamente"})
 }

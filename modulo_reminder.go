@@ -333,21 +333,6 @@ func updateReminderById(c *gin.Context) {
 		return
 	}
 
-	/*
-		type EditReminder struct {
-			P_idToDo		int				`json:"P_idToDo"`
-			P_nombre		sql.NullString			`json:"P_nombre"`
-			P_descripcion	sql.NullString			`json:"P_descripcion"`
-			P_fecha			sql.NullString			`json:"P_fecha"`
-			P_prioridad		sql.NullInt64 	`json:"P_prioridad"`
-			P_tag1			string	`json:"P_tag1"`
-			P_tag2			string	`json:"P_tag2"`
-			P_tag3			string	`json:"P_tag3"`
-			P_tag4			string	`json:"P_tag4"`
-			P_tag5			string	`json:"P_tag5"`
-		}
-	*/
-
 	// Borrar registro de recordatorios de usuario de redis
 	deleted, err2 := rdb.Del(ctx, "Reminders:"+*reminderNewValue.CodUsuario).Result()
 
@@ -426,9 +411,17 @@ func updateReminderById(c *gin.Context) {
 	}
 
 	// Log
-	descripcion := "Se actualizó recordatorio ID: " + strconv.Itoa(reminderNewValue.P_idToDo)
+	descripcion := fmt.Sprintf("Se actualizó recordatorio | ID_TO_DO: %d | Usuario ID: %d",
+		reminderNewValue.P_idToDo, reminderNewValue.P_usuario)
 
-	insertarLog(reminderNewValue.P_idToDo, "UPDATE_RECORDATORIO", descripcion)
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(reminderNewValue.P_usuario, "UPDATE_RECORDATORIO", descripcion)
 
 	// Salida
 	c.JSON(200, gin.H{
@@ -489,11 +482,11 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
-	descripcion := "Se eliminó/recuperó recordatorio ID: " +
+	descripcion := "Se eliminó recordatorio ID: " +
 		strconv.Itoa(delReminder.N_idRecordatorio) +
 		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
 
-	insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
+	insertarLog(delReminder.P_usuario, "ELIMINAR_RECORDATORIO", descripcion)
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
@@ -545,19 +538,27 @@ func deleteMultipleReminder(c *gin.Context) {
 	// Llamado al procedimiento
 	result, err := db.Exec("CALL eliminar_recordatorios_multiple(?)", delReminder.N_idRecordatorios)
 
+	rowsAffected, _ := result.RowsAffected()
+
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	descripcion := "Se eliminaron los recordatorios ID: " +
-		delReminder.N_idRecordatorios +
-		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
+	// Log
+	descripcion := fmt.Sprintf("Se eliminaron los recordatorios | IDs: %s | Usuario ID: %d",
+		delReminder.N_idRecordatorios, delReminder.P_usuario)
 
-	insertarLog(delReminder.P_usuario, "DELETE_RECORDATORIO", descripcion)
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(delReminder.P_usuario, "ELIMINAR_MULTIPLES_RECORDATORIOS", descripcion)
 
-	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",
 		"rowsAffected": rowsAffected,

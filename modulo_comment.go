@@ -203,9 +203,9 @@ func addPersonalComment(c *gin.Context) {
 		fmt.Printf("\nError de conexión: %v", err3)
 
 	} else if deleted > 0 {
-		fmt.Printf("\nRegsitro eliminado con éxito")
+		fmt.Printf("\nRegistro eliminado con éxito")
 	} else {
-		fmt.Printf("\nNo es encontró registro relacionado")
+		fmt.Printf("\nNo se encontró registro relacionado")
 	}
 
 	// Se llama el insert
@@ -224,6 +224,7 @@ func addPersonalComment(c *gin.Context) {
 		log.Printf("LastInsertId error: %v", err)
 	}
 
+	// log
 	descripcion := "Comentario creado | ID: " +
 		strconv.FormatInt(insertedID, 10) +
 		" | Horario: " + strconv.Itoa(newComment.N_idHorario)
@@ -234,7 +235,7 @@ func addPersonalComment(c *gin.Context) {
 				log.Println("panic en insertarLog:", r)
 			}
 		}()
-		insertarLog(0, "CREAR_COMENTARIO", descripcion)
+		insertarLog(newComment.N_idUsuario, "CREAR_COMENTARIO", descripcion)
 	}()
 
 	rowsAffected, _ := result.RowsAffected()
@@ -282,7 +283,7 @@ func updatePersonalComment(c *gin.Context) {
 	} else if deleted > 0 {
 		fmt.Printf("\nRegsitro eliminado con éxito")
 	} else {
-		fmt.Printf("\nNo es encontró registro relacionado")
+		fmt.Printf("\nNo se encontró registro relacionado")
 	}
 
 	result, err := db.Exec(
@@ -297,15 +298,19 @@ func updatePersonalComment(c *gin.Context) {
 		return
 	}
 
-	descripcion := "Comentario actualizado | ID: " +
-		strconv.Itoa(newComment.N_idComentarios) +
-		" | Usuario ID: " + strconv.Itoa(newComment.N_idUsuario)
+	// Log
+	descripcion := fmt.Sprintf("Comentario actualizado | ID: %d | Usuario ID: %d",
+		newComment.N_idComentarios,
+		newComment.N_idUsuario)
 
-	insertarLog(
-		newComment.N_idUsuario,
-		"ACTUALIZAR_COMENTARIO",
-		descripcion,
-	)
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Editar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(newComment.N_idUsuario, "ACTUALIZAR_COMENTARIO", descripcion)
 
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
@@ -364,15 +369,20 @@ func deletePersonalComment(c *gin.Context) {
 		return
 	}
 
-	descripcion := "Comentario eliminado | ID: " +
-		strconv.Itoa(delComment.N_idComentarios) +
-		" | Usuario ID: " + strconv.Itoa(delComment.N_idUsuario)
+	// Log
+	descripcion := fmt.Sprintf("Comentario eliminado | ID: %d | Usuario ID: %d",
+		delComment.N_idComentarios,
+		delComment.N_idUsuario)
 
-	insertarLog(
-		delComment.N_idUsuario,
-		"ELIMINAR_COMENTARIO",
-		descripcion,
-	)
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(delComment.N_idUsuario, "ELIMINAR_COMENTARIO", descripcion)
+
 	rowsAffected, _ := result.RowsAffected()
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",

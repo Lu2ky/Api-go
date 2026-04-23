@@ -19,8 +19,8 @@ var ctx = context.Background()
 var rdb *redis.Client
 
 func init() {
-	err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
-	//err := godotenv.Load() // Load enviorement variables
+	//err := godotenv.Load("../../config/goapiconfig.env") //PARA LOCAL
+	err := godotenv.Load() // Load enviorement variables
 
 	if err != nil {
 		log.Println("No se pudo cargar el archivo .env, usando variables de sistema")
@@ -58,9 +58,9 @@ func main() {
 	v1 := router.Group("/api/v1")
 	registerV1Routes(v1)
 
-	//router.Run("0.0.0.0:8080") // The port number for expone the API
+	router.Run("0.0.0.0:8080") // The port number for expone the API
 
-	router.Run(":8080")
+	//router.Run(":8080")
 }
 
 func registerLegacyRoutes(router gin.IRoutes) {
@@ -172,8 +172,11 @@ func registerV1Routes(router gin.IRouter) {
 		protected.POST("/notifications/mute", muteNotification) //Has userCode validation
 
 		// Paleta de colores
-		protected.POST("/palette", receivePaletteData) //TODO
-		protected.POST("/palette/get", getPalette)     //TODO
+		protected.POST("/palette", receivePaletteData)
+		protected.POST("/palette/get", getPalette)
+
+		// Logs
+		protected.POST("/logs", insertLog)
 	}
 
 	// User configuration
