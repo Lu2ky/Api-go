@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
-
+	"strconv"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,6 +35,27 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 
 		El operador := lo que hace es definir una variable e inferir su tipo automáticamente.
 	*/
+
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "OfficialSchedule:"+id).Result()
+
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var ofcschedules []OfficialSchedule
+
+		err := json.Unmarshal([]byte(val), &ofcschedules)
+
+		if err == nil {
+			c.JSON(200, ofcschedules)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
+
 	rows, err := db.Query(`SELECT ao.* FROM ActividadesOficiales ao JOIN Usuarios u ON ao.N_idUsuario = u.N_idUsuario WHERE u.T_codUsuario = ?`, id)
 
 	//	si err != nil entonces significa que hay un error.
@@ -69,7 +92,7 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 			&ofcschedule.Nrc,
 			&ofcschedule.Course,
 			&ofcschedule.Tag,
-			&ofcschedule.Teacher, //falta
+			&ofcschedule.Teacher,
 			&ofcschedule.Day,
 			&ofcschedule.StartHour,
 			&ofcschedule.EndHour,
@@ -77,6 +100,8 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 			&ofcschedule.Credits,
 			&ofcschedule.Standardofcalification,
 			&ofcschedule.Campus,
+			&ofcschedule.N_idPeriodoAcademico,
+			&ofcschedule.Periodo_academico,
 			&ofcschedule.FechaInicio,
 			&ofcschedule.FechaFinal,
 		)
@@ -98,6 +123,347 @@ func getOfficialScheduleByUserId(c *gin.Context) {
 		return
 	}
 
+	// Devuelve la consulta de la base relacional
+	// Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
+	c.JSON(200, ofcschedules)
+}
+
+func getActivitiesTimesData(c *gin.Context) {
+	var checkActTime CheckActivitiesTimesData
+
+	err := c.BindJSON(&checkActTime)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+
+	rows, err := db.Query(
+		`
+		SELECT * FROM HorarioCompleto WHERE N_idUsuario = ? AND N_dia = ?
+		`, checkActTime.T_idUsuario, checkActTime.N_dia)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	defer rows.Close()
+
+	//	Aquí se van a almacenar los resultados de la consulta.
+	//	Se utiiza el OfficialSchedule para tener una estructura a la hora de guardar la información de la consulta.
+
+	var actTimeArr []ActivitiesTimesData
+
+	for rows.Next() {
+		var actTime ActivitiesTimesData
+		err := rows.Scan(
+			&actTime.N_iduser,
+			&actTime.N_idcourse,
+			&actTime.N_dia,
+			&actTime.StartHour,
+			&actTime.EndHour,
+			&actTime.FechaInicio,
+			&actTime.FechaFinal,
+			&actTime.IsDeleted,
+		)
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+
+		//	Y aquí se agrega el objeto ofcschedule al arreglo ofcschedules.
+		actTimeArr = append(actTimeArr, actTime)
+	}
+
+	//	Se verifica si hubo errores mientras se hizo la iteración usando rows.Err().
+	//	Si Next() retorna False, entonces para revisar cuál fue el error se usa rows.Err()
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
+	c.JSON(200, actTimeArr)
+}
+
+func getAcademicPeriods(c *gin.Context) {
+	//	este ID sale de la URL | /GetOfficialScheduleByUserId/:id
+	//	Param() se encarga de extraer los parámetros definidos en la ruta.
+
+	/*
+		db.Query retorna rows y err
+		rows = *sql.rows | Es un puntero que tiene información de la consulta.
+
+		* Para iterar sobre los resultados se usa rows.Next()
+		* Para leer los valores de cada fila se hace un rows.Scan()
+		* Y para cerrar la consulta se hace un rows.Close(), lo cual es necesario para evitar fugas de recursos que causan
+		errores como que ya no se pueden hacer conexiones.
+
+		Cada vez que se hace el db.Query hay que hacer esos pasos para sacar la info de la consulta.
+
+		El operador := lo que hace es definir una variable e inferir su tipo automáticamente.
+	*/
+
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "AcademicPeriods").Result()
+
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var ofcschedules []AcademicPeriod
+
+		err := json.Unmarshal([]byte(val), &ofcschedules)
+
+		if err == nil {
+			c.JSON(200, ofcschedules)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
+
+	rows, err := db.Query(`SELECT * FROM PeriodoAcademico;`)
+
+	//	si err != nil entonces significa que hay un error.
+	//	nil es similar a null. Entonces si el error es nulo significa que no hay errores.
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	defer rows.Close()
+
+	var ofcschedules []AcademicPeriod
+
+	for rows.Next() {
+		var ofcschedule AcademicPeriod
+		err := rows.Scan(
+			&ofcschedule.N_idPeriodoAcademico,
+			&ofcschedule.T_nombre,
+			&ofcschedule.Dt_fechaInicio,
+			&ofcschedule.Dt_fechaFinal,
+			&ofcschedule.B_isDeleted,
+		)
+		if err != nil {
+			log.Printf("Scan error: %v", err)
+			c.JSON(500, gin.H{"error": "Error en procesamiento de datos"})
+			return
+		}
+
+		//	Y aquí se agrega el objeto ofcschedule al arreglo ofcschedules.
+		ofcschedules = append(ofcschedules, ofcschedule)
+	}
+
+	//	Se verifica si hubo errores mientras se hizo la iteración usando rows.Err().
+	//	Si Next() retorna False, entonces para revisar cuál fue el error se usa rows.Err()
+	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
+		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
+		return
+	}
+
+	// Devuelve la consulta de la base relacionals
 	//	Se retorna con código 200 (OK status) el arreglo formando anteriormente en formato JSON.
 	c.JSON(200, ofcschedules)
+}
+
+func addAcademicPeriod(c *gin.Context) {
+	var newAcademicPeriodValue NewAcademicPeriod
+
+	err := c.BindJSON(&newAcademicPeriodValue)
+
+	fmt.Printf("%v", newAcademicPeriodValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"Error": "Formato invalido de json"})
+		return
+
+	}
+
+	// Borrar registro de periodos académicos de redis
+	deleted, err2 := rdb.Del(ctx, "AcademicPeriods").Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace el llamado al Procedimiento
+	result, err := db.Exec("CALL agregarPeriodo(?, ?, ?);",
+		newAcademicPeriodValue.T_nombre,
+		newAcademicPeriodValue.Dt_fechaInicio,
+		newAcademicPeriodValue.Dt_fechaFinal,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "No se encuentra el archivo a importar"})
+		return
+
+	}
+
+	descripcion := "Se agregó un nuevo periodo académico: " +
+		" | Nombre: " + newAcademicPeriodValue.T_nombre +
+		" | Fecha inicial: " + newAcademicPeriodValue.Dt_fechaInicio +
+		" | Fecha final: " + newAcademicPeriodValue.Dt_fechaFinal +
+		" | Usuario: " + strconv.Itoa(newAcademicPeriodValue.N_idUsuario)
+
+	insertarLog(newAcademicPeriodValue.N_idUsuario, "AGREGAR PERIODO ACADEMICO", descripcion)
+	c.JSON(200, gin.H{
+		"message": "Periodo académico añadido correctamente",
+	})
+
+}
+
+func updateAcademicPeriod(c *gin.Context) {
+	var newAcademicPeriodValue UpdateAcademicPeriod
+
+	err := c.BindJSON(&newAcademicPeriodValue)
+
+	fmt.Printf("%v", newAcademicPeriodValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"Error": "Formato invalido de json"})
+		return
+
+	}
+
+	// Borrar registro de periodos académicos de redis
+	deleted, err2 := rdb.Del(ctx, "AcademicPeriods").Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace el llamado al Procedimiento
+	result, err := db.Exec("CALL editarPeriodo(?, ?, ?, ?);",
+		newAcademicPeriodValue.N_idPeriodo,
+		newAcademicPeriodValue.T_nombre,
+		newAcademicPeriodValue.Dt_fechaInicio,
+		newAcademicPeriodValue.Dt_fechaFinal,
+	)
+
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "No se encuentra el archivo a importar"})
+		return
+
+	}
+
+	var nombre, fechaInicio, fechaFin string
+
+	if newAcademicPeriodValue.T_nombre != nil {
+		nombre = *newAcademicPeriodValue.T_nombre
+	} else {
+		nombre = "Sin cambios"
+	}
+
+	if newAcademicPeriodValue.Dt_fechaInicio != nil {
+		fechaInicio = *newAcademicPeriodValue.Dt_fechaInicio
+	} else {
+		fechaInicio = "Sin cambios"
+	}
+
+	if newAcademicPeriodValue.Dt_fechaFinal != nil {
+		fechaFin = *newAcademicPeriodValue.Dt_fechaFinal
+	} else {
+		fechaFin = "Sin cambios"
+	}
+
+	descripcion := "Se editó un periodo académico: " +
+		" | ID: " + strconv.Itoa(newAcademicPeriodValue.N_idPeriodo) +
+		" | Nombre: " + nombre +
+		" | Fecha inicial: " + fechaInicio +
+		" | Fecha final: " + fechaFin +
+		" | Usuario: " + strconv.Itoa(newAcademicPeriodValue.N_idUsuario)
+
+	insertarLog(newAcademicPeriodValue.N_idUsuario, "EDITAR PERIODO ACADEMICO", descripcion)
+	c.JSON(200, gin.H{
+		"message": "Periodo academico editado correctamente",
+	})
+
+}
+
+func deleteAcademicPeriod(c *gin.Context) {
+	var newAcademicPeriodValue DeleteAcademicPeriod
+
+	err := c.BindJSON(&newAcademicPeriodValue)
+
+	fmt.Printf("%v", newAcademicPeriodValue)
+
+	if err != nil {
+		c.JSON(400, gin.H{"Error": "Formato invalido de json"})
+		return
+
+	}
+
+	// Borrar registro de periodos académicos de redis
+	deleted, err2 := rdb.Del(ctx, "AcademicPeriods").Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	result, err := db.Exec("CALL eliminarPeriodo(?);",
+		newAcademicPeriodValue.N_idPeriodo,
+	)
+
+	// Aquí se hace el llamado al Procedimiento
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "No se encuentra el archivo a importar"})
+		return
+
+	}
+
+	descripcion := "Se eliminó un periodo académico: " +
+		" | ID: " + strconv.Itoa(newAcademicPeriodValue.N_idUsuario)
+
+	insertarLog(newAcademicPeriodValue.N_idUsuario, "ELIMINAR PERIODO ACADEMICO", descripcion)
+	c.JSON(200, gin.H{
+		"message": "Periodo academico borrado correctamente",
+	})
+
 }

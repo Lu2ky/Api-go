@@ -1,18 +1,40 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
-
+	"strconv"
 	"github.com/gin-gonic/gin"
 )
 
 //	--------------- Recordatorios ----------------------------------------
-//
-// Obtener la lista de los recordatorios
+
+// Obtener la lista de los recordatorios y sus etiquetas
 func GetRemindersTagsByUserId(c *gin.Context) {
 
 	//	Id del usuario
 	id_User := c.Param("id")
+
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "Reminder&Tags:"+id_User).Result()
+
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var remindersArray []RemindersTag
+
+		err := json.Unmarshal([]byte(val), &remindersArray)
+
+		if err == nil {
+			c.JSON(200, remindersArray)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
 
 	//	Consulta
 	rows, err := db.Query(
@@ -62,6 +84,7 @@ func GetRemindersTagsByUserId(c *gin.Context) {
 		return
 	}
 
+	// Devuelve la consulta de la base relacional
 	c.JSON(200, remindersArray)
 }
 
@@ -83,6 +106,26 @@ func GetRemindersByUserId(c *gin.Context) {
 
 	//	Id del usuario
 	id_User := c.Param("id")
+
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "Reminders:"+id_User).Result()
+
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var remindersArray []Reminders
+
+		err := json.Unmarshal([]byte(val), &remindersArray)
+
+		if err == nil {
+			c.JSON(200, remindersArray)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
 
 	//	Consulta
 	rows, err := db.Query(
@@ -130,6 +173,7 @@ func GetRemindersByUserId(c *gin.Context) {
 		return
 	}
 
+	// Devuelve la consulta de la base relacional
 	c.JSON(200, remindersArray)
 }
 
@@ -144,32 +188,52 @@ func addReminder(c *gin.Context) {
 		return
 	}
 
-	/*
-		type ReminderNewValue struct {
-			P_usuario     int            `json:"P_usuario"`
-			P_nombre      string         `json:"P_nombre"`
-			P_descripcion string         `json:"P_descripcion"`
-			P_fecha       string         `json:"P_fecha"`
-			P_prioridad   int            `json:"P_prioridad"`
-			P_tag1        sql.NullString `json:"P_tag1"`
-			P_tag2        sql.NullString `json:"P_tag2"`
-			P_tag3        sql.NullString `json:"P_tag3"`
-			P_tag4        sql.NullString `json:"P_tag4"`
-			P_tag5        sql.NullString `json:"P_tag5"`
-		}
-	*/
-
-	// Iniciar transacción para garantizar la misma conexión
-	tx, err := db.Begin()
-	if err != nil {
-		log.Printf("Error al iniciar transacción: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
+	if !AuthorityCheck(*reminderNewValue.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
 		return
 	}
-	defer tx.Rollback()
+
+	// Borrar registro de recordatorios de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "Reminders:"+*reminderNewValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	deleted, err3 := rdb.Del(ctx, "Reminder&Tags:"+*reminderNewValue.CodUsuario).Result()
+
+	if err3 != nil {
+		fmt.Printf("\nError de conexión: %v", err3)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Borrar registro de etiquetas de usuario de redis
+	deleted, err4 := rdb.Del(ctx, "TagsByUser:"+*reminderNewValue.CodUsuario).Result()
+
+	if err4 != nil {
+		fmt.Printf("\nError de conexión: %v", err4)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Variables para salida
+	var toDoId int64
+	var reminderId int64
 
 	// Aquí se hace el llamado al Procedimiento
-	rows, err := tx.Query("SELECT crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	err5 := db.QueryRow("SELECT crear_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		reminderNewValue.P_usuario,
 		reminderNewValue.P_nombre,
 		reminderNewValue.P_descripcion,
@@ -180,47 +244,39 @@ func addReminder(c *gin.Context) {
 		reminderNewValue.P_tag3,
 		reminderNewValue.P_tag4,
 		reminderNewValue.P_tag5,
-	)
-	if err != nil {
-		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-	defer rows.Close()
+	).Scan(&toDoId)
 
-	var newID int64
-
-	// Navegar por todos los result sets hasta encontrar el que tiene el ID
-	for {
-		if rows.Next() {
-			err = rows.Scan(&newID)
-			if err != nil {
-				log.Printf("Error al leer resultado: %v", err)
-			}
-		}
-		if !rows.NextResultSet() {
-			break
-		}
-	} // <-- el for cierra aquí
-
-	if err = rows.Err(); err != nil {
-		log.Printf("Error en rows: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
+	if err5 != nil {
+		log.Printf("Error ejecutando o leyendo resultado: %v", err5)
+		c.JSON(500, gin.H{"error": "Error al crear"})
 		return
 	}
 
-	// Confirmar la transacción
-	if err = tx.Commit(); err != nil {
-		log.Printf("Error al confirmar transacción: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
+	// Consulta el id toDo del recordatorio
+	err6 := db.QueryRow("SELECT N_idRecordatorio FROM ToDoList WHERE N_idToDoList = ?",
+		toDoId,
+	).Scan(&reminderId)
+
+	if err6 != nil {
+		log.Printf("Error ejecutando o leyendo resultado: %v", err5)
+		c.JSON(500, gin.H{"error": "Error al consultar el id"})
 		return
 	}
 
-	log.Printf("ID del ToDo creado: %d", newID)
+	// Log
 
+	log.Printf("ID del ToDo creado: %d", reminderId)
+	descripcion := "Se creó recordatorio ID: " + strconv.FormatInt(reminderId, 10) +
+		" | Usuario: " + strconv.Itoa(reminderNewValue.P_usuario) +
+		" | Nombre: " + reminderNewValue.P_nombre
+
+	insertarLog(reminderNewValue.P_usuario, "CREAR_RECORDATORIO", descripcion)
+
+	// Salida
 	c.JSON(200, gin.H{
 		"message":    "Recordatorio creado correctamente",
-		"InsertedId": newID,
+		"toDoId":     toDoId,
+		"reminderId": reminderId,
 	})
 }
 
@@ -235,21 +291,45 @@ func updateReminderById(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
 		return
 	}
+	if !AuthorityCheck(*reminderNewValue.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
 
-	/*
-		type EditReminder struct {
-			P_idToDo		int				`json:"P_idToDo"`
-			P_nombre		sql.NullString			`json:"P_nombre"`
-			P_descripcion	sql.NullString			`json:"P_descripcion"`
-			P_fecha			sql.NullString			`json:"P_fecha"`
-			P_prioridad		sql.NullInt64 	`json:"P_prioridad"`
-			P_tag1			string	`json:"P_tag1"`
-			P_tag2			string	`json:"P_tag2"`
-			P_tag3			string	`json:"P_tag3"`
-			P_tag4			string	`json:"P_tag4"`
-			P_tag5			string	`json:"P_tag5"`
-		}
-	*/
+	// Borrar registro de recordatorios de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "Reminders:"+*reminderNewValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	deleted, err3 := rdb.Del(ctx, "Reminder&Tags:"+*reminderNewValue.CodUsuario).Result()
+
+	if err3 != nil {
+		fmt.Printf("\nError de conexión: %v", err3)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Borrar registro de etiquetas de usuario de redis
+	deleted, err4 := rdb.Del(ctx, "TagsByUser:"+*reminderNewValue.CodUsuario).Result()
+
+	if err4 != nil {
+		fmt.Printf("\nError de conexión: %v", err4)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
 
 	//	Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL editar_recordatorio_5tags(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -275,16 +355,46 @@ func updateReminderById(c *gin.Context) {
 	rowsAffected, _ := result.RowsAffected()
 
 	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
+		c.JSON(404, gin.H{"error": "Recordatorio no encontrado"})
 		return
 	}
 
+	// Consulta el id toDo del recordatorio
+	var toDoId = reminderNewValue.P_idToDo
+	var reminderId int64
+
+	err5 := db.QueryRow("SELECT N_idRecordatorio FROM ToDoList WHERE N_idToDoList = ?",
+		toDoId,
+	).Scan(&reminderId)
+
+	if err5 != nil {
+		log.Printf("Error ejecutando o leyendo resultado: %v", err5)
+		c.JSON(500, gin.H{"error": "Error al consultar el id"})
+		return
+	}
+
+	// Log
+	descripcion := fmt.Sprintf("Se actualizó recordatorio | ID_TO_DO: %d | Usuario ID: %d",
+		reminderNewValue.P_idToDo, reminderNewValue.P_usuario)
+
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(reminderNewValue.P_usuario, "UPDATE_RECORDATORIO", descripcion)
+
+	// Salida
 	c.JSON(200, gin.H{
-		"message": "Recordatorio creado correctamente",
+		"message":    "Recordatorio actualizado correctamente",
+		"reminderId": reminderId,
 	})
 }
 
 // Procedimiento: Eliminar recordatorio
+
 func deleteOrRecoverReminder(c *gin.Context) {
 
 	var delReminder DelReminder
@@ -295,7 +405,103 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
+	if delReminder.P_usuario == 0 {
+		c.JSON(400, gin.H{"error": "usuario requerido"})
+		return
+	}
+	if !AuthorityCheck(*delReminder.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
+
+	// Borrar registro de recordatorios de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "Reminders:"+*delReminder.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	deleted, err3 := rdb.Del(ctx, "Reminder&Tags:"+*delReminder.CodUsuario).Result()
+
+	if err3 != nil {
+		fmt.Printf("\nError de conexión: %v", err3)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegsitro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo es encontró registro relacionado")
+	}
+
+	// Llamado al procedimiento
 	result, err := db.Exec("CALL eliminar_recordatorio(?)", delReminder.N_idRecordatorio)
+	if err != nil {
+		log.Printf(" Database error: %v", err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	descripcion := "Se eliminó recordatorio ID: " +
+		strconv.Itoa(delReminder.N_idRecordatorio) +
+		" | Usuario: " + strconv.Itoa(delReminder.P_usuario)
+
+	insertarLog(delReminder.P_usuario, "ELIMINAR_RECORDATORIO", descripcion)
+
+	rowsAffected, _ := result.RowsAffected()
+	c.JSON(200, gin.H{
+		"message":      "Recordatorio alterado correctamente",
+		"rowsAffected": rowsAffected,
+	})
+}
+
+func deleteMultipleReminder(c *gin.Context) {
+
+	var delReminder MultiDelReminder
+
+	err := c.BindJSON(&delReminder)
+
+	fmt.Printf("%v", delReminder)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": "formato invalido de json"})
+		return
+	}
+	if !AuthorityCheck(*delReminder.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
+
+	// Borrar registro de recordatorios de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "Reminders:"+*delReminder.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	deleted, err3 := rdb.Del(ctx, "Reminder&Tags:"+*delReminder.CodUsuario).Result()
+
+	if err3 != nil {
+		fmt.Printf("\nError de conexión: %v", err3)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegsitro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo es encontró registro relacionado")
+	}
+
+	// Llamado al procedimiento
+	result, err := db.Exec("CALL eliminar_recordatorios_multiple(?)", delReminder.N_idRecordatorios)
+
+	rowsAffected, _ := result.RowsAffected()
 
 	if err != nil {
 		log.Printf("Database error: %v", err)
@@ -303,7 +509,19 @@ func deleteOrRecoverReminder(c *gin.Context) {
 		return
 	}
 
-	rowsAffected, _ := result.RowsAffected()
+	// Log
+	descripcion := fmt.Sprintf("Se eliminaron los recordatorios | IDs: %s | Usuario ID: %d",
+		delReminder.N_idRecordatorios, delReminder.P_usuario)
+
+	go func(uID int, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertarLog(uID, acc, desc)
+	}(delReminder.P_usuario, "ELIMINAR_MULTIPLES_RECORDATORIOS", descripcion)
+
 	c.JSON(200, gin.H{
 		"message":      "Comentario alterado correctamente",
 		"rowsAffected": rowsAffected,

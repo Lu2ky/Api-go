@@ -2,8 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"log"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,6 +13,27 @@ import (
 func getPersonalScheduleByUserId(c *gin.Context) {
 	id := c.Param("id")
 	var rows *sql.Rows
+
+	//	Consulta a redis
+	val, err2 := rdb.Get(c.Request.Context(), "PersonalSchedule:"+id).Result()
+
+	if err2 == nil {
+		fmt.Printf("\n Si existe registro")
+		var perschedules []PersonalSchedule
+
+		err := json.Unmarshal([]byte(val), &perschedules)
+
+		if err == nil {
+			c.JSON(200, perschedules)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
+	fmt.Printf("\n>>>>Creando registro")
+
 	rows, err := db.Query(`
 		SELECT ao.*
 		FROM ActividadesPersonales ao
@@ -29,9 +51,11 @@ func getPersonalScheduleByUserId(c *gin.Context) {
 	var perschedules []PersonalSchedule
 	for rows.Next() {
 		var perschedule PersonalSchedule
-		err := rows.Scan(&perschedule.N_iduser,
+		err := rows.Scan(
+			&perschedule.N_iduser,
 			&perschedule.N_idcourse,
-			&perschedule.Activity, &perschedule.Tag,
+			&perschedule.Activity,
+			//&perschedule.Tag,
 			&perschedule.Description,
 			&perschedule.Dt_Start,
 			&perschedule.Dt_End,
@@ -47,6 +71,8 @@ func getPersonalScheduleByUserId(c *gin.Context) {
 		perschedules = append(perschedules, perschedule)
 
 	}
+
+	// Devuelve la consulta de la base relacional
 	c.JSON(200, perschedules)
 }
 
@@ -71,6 +97,10 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
 		return
 	}
+	if !AuthorityCheck(*personalNewValue.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
 
 	/*
 		type EditPersonalActivity struct {
@@ -93,6 +123,18 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 		Los signos de pregunta (?) indican los parámetros que se envían a la consulta.
 		en el segundo argumento, los parámetros deben estar en el mismo orden que son solicitados en la consulta.
 	*/
+
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*personalNewValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
 
 	//	Aquí se hace el llamado al Procedimiento
 	result, err := db.Exec("CALL editar_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?)",
@@ -122,133 +164,30 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 		return
 	}
 
+	// Log
+	var userId int
+	err4 := db.QueryRow("CALL get_id_tabla(?)", *personalNewValue.CodUsuario).Scan(&userId)
+	if err4 != nil {
+		log.Printf("Error obteniendo ID: %v", err)
+	}
+
+	descripcion := fmt.Sprintf("Se actualizó actividad personal | ID: %d | Usuario ID: %d",
+		personalNewValue.P_idCurso, userId)
+
+	go func(uID string, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertLogCod(uID, acc, desc)
+	}(*personalNewValue.CodUsuario, "ACTUALIZAR_ACTIVIDAD_PERSONAL", descripcion)
+
 	c.JSON(200, gin.H{
 		"message": "Actividad actualizada correctamente",
 	})
 }
 
-func updateNameOfPersonalScheduleByIdCourse(c *gin.Context) {
-	//	Aquí se instancia la estructura definida en la parte superior.
-	var newValue PersonalScheduleNewValue
-
-	/*
-		BindJSON() se encarga de tomar el body request de la petición y lo convierte en una estructura de GO
-		Aquí es importante que el JSON del body tenga los mismos campos ya definidos, en este caso, en PersonalScheduleNewValue
-		También retorna un error en caso de haber uno.
-
-		Se usa como argumento &newValue para darle la dirección de memoria de la estructura GO y así almacenar la info.
-	*/
-	err := c.BindJSON(&newValue)
-
-	if err != nil {
-		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
-		return
-	}
-	/*
-		El método Query() se utilizaba cuando la consulta era un SELECT.
-		En este caso, un UPDATE, se utiliza Exec, y retorna:
-			sql.Result, error
-
-		Los signos de pregunta (?) indican los parámetros que se envían a la consulta.
-		en el segundo argumento, los parámetros deben estar en el mismo orden que son solicitados en la consulta.
-	*/
-	result, err := db.Exec("UPDATE ActividadesPersonales SET Actividad = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
-
-	if err != nil {
-		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-
-	//	rowsAffected contiene la cantidad de filas que fueron modificadas
-	//	Se utiliza un guión al piso (_) para ignorar el error, porque result.RowsAffected retorna int64, error
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"message":      "Personal schedule updated successfully",
-		"rowsAffected": rowsAffected,
-	})
-}
-func updateDescriptionOfPersonalScheduleByIdCourse(c *gin.Context) {
-	var newValue PersonalScheduleNewValue
-	err := c.BindJSON(&newValue)
-	if err != nil {
-		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
-		return
-	}
-	result, err := db.Exec("UPDATE ActividadesPersonales SET Descripcion = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
-	if err != nil {
-		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"message":      "Personal schedule updated successfully",
-		"rowsAffected": rowsAffected,
-	})
-}
-func updateStartHourOfPersonalScheduleByIdCourse(c *gin.Context) {
-	var newValue PersonalScheduleNewValue
-	err := c.BindJSON(&newValue)
-	if err != nil {
-		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
-		return
-	}
-	result, err := db.Exec("UPDATE ActividadesPersonales SET Hora_Inicio = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
-	if err != nil {
-		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"message":      "Personal schedule updated successfully",
-		"rowsAffected": rowsAffected,
-	})
-}
-func updateEndHourOfPersonalScheduleByIdCourse(c *gin.Context) {
-	var newValue PersonalScheduleNewValue
-	err := c.BindJSON(&newValue)
-	if err != nil {
-		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
-		return
-	}
-	result, err := db.Exec("UPDATE ActividadesPersonales SET Hora_Fin = ? WHERE N_idCurso= ? ", newValue.NewActivityValue, newValue.IdPersonalSchedule)
-	if err != nil {
-		log.Printf("Database error: %v", err)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-		return
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"message":      "Personal schedule updated successfully",
-		"rowsAffected": rowsAffected,
-	})
-}
 func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 	var deleteValue forDeleteOrRecoveryPersonalSchedule
 
@@ -257,7 +196,24 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(400, gin.H{"Palurdo": "formato invalido de json"})
 		return
 	}
+	if !AuthorityCheck(*deleteValue.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
 
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*deleteValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	// Aquí se hace la acutalización
 	result, err := db.Exec("CALL eliminar_actividad_personal (?);", deleteValue.IdPersonalSchedule)
 
 	if err != nil {
@@ -271,6 +227,19 @@ func deleteOrRecoveryPersonalScheduleByIdCourse(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Personal schedule not found"})
 		return
 	}
+
+	// Log
+	descripcion := fmt.Sprintf("Se eliminó actividad personal | ID: %d | Usuario ID: %d",
+		deleteValue.IdPersonalSchedule, deleteValue.N_idUsuario)
+
+	go func(uID string, acc, desc string) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recuperado de pánico en log (Eliminar): %v", r)
+			}
+		}()
+		insertLogCod(uID, acc, desc)
+	}(*deleteValue.CodUsuario, "ELIMINAR_ACTIVIDAD_PERSONAL", descripcion)
 
 	c.JSON(200, gin.H{
 		"message":      "Personal schedule updated successfully",
@@ -288,6 +257,10 @@ func addPersonalActivity(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "formato invalido de json"})
 		return
 	}
+	if !AuthorityCheck(*personalNewValue.CodUsuario, c) {
+		c.AbortWithStatusJSON(401, gin.H{"error": "Autorización requerida"})
+		return
+	}
 
 	/*
 		type NewPersonalActivity struct {
@@ -303,8 +276,22 @@ func addPersonalActivity(c *gin.Context) {
 		}
 	*/
 
+	// Borrar registro de datos de usuario de redis
+	deleted, err2 := rdb.Del(ctx, "PersonalSchedule:"+*personalNewValue.CodUsuario).Result()
+
+	if err2 != nil {
+		fmt.Printf("\nError de conexión: %v", err2)
+
+	} else if deleted > 0 {
+		fmt.Printf("\nRegistro eliminado con éxito")
+	} else {
+		fmt.Printf("\nNo se encontró registro relacionado")
+	}
+
+	var newActId int
+
 	//	Aquí se hace el llamado al Procedimiento
-	result, err := db.Exec("CALL crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	err = db.QueryRow("SELECT crear_actividad_personal(?, ?, ?, ?, ?, ?, ?, ?)",
 		personalNewValue.P_usuario,
 		personalNewValue.P_nombreCurso,
 		personalNewValue.P_descripcion,
@@ -313,93 +300,36 @@ func addPersonalActivity(c *gin.Context) {
 		personalNewValue.P_dia,
 		personalNewValue.P_horaInicio,
 		personalNewValue.P_horaFin,
-		personalNewValue.P_periodo,
-	)
+		//personalNewValue.P_periodo,
+	).Scan(&newActId)
 
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-
-	rowsAffected, _ := result.RowsAffected()
-
-	if rowsAffected == 0 {
-		c.JSON(404, gin.H{"error": "Personal schedule not found"})
-		return
-	}
-
 	/*
-		tx, err := db.Begin()
-		if err != nil {
-			log.Printf("Transaction error: %v", err)
-			c.JSON(500, gin.H{"error": "Internal server error"})
-			return
-		}
-		result0, err0 := tx.Exec(
-			"INSERT INTO Cursos (T_nombre, N_idEtiqueta, T_descripcion) VALUES (?, ?, ?);",
-			reminderNewValue.Activity,
-			reminderNewValue.IdTag,
-			reminderNewValue.Description,
-		)
-		idCurso, _ := result0.LastInsertId()
+		rowsAffected, _ := result.RowsAffected()
 
-		if err0 != nil {
-			tx.Rollback()
-			log.Printf("Database error: %v", err0)
-			c.JSON(500, gin.H{"error": "Error en primer query"})
-			return
-		}
-		result1, err1 := tx.Exec(
-			"INSERT INTO dias_clase(N_dia, TM_horaInicio, TM_horaFin) VALUES (?, ?, ?)",
-			reminderNewValue.Day,
-			reminderNewValue.StartHour,
-			reminderNewValue.EndHour,
-		)
-		nIdDias, _ := result1.LastInsertId()
-		if err1 != nil {
-			tx.Rollback()
-			log.Printf("Database error: %v", err1)
-			c.JSON(500, gin.H{"error": "Error en segunda query"})
-			return
-		}
-
-		_, err = tx.Exec(
-			"INSERT INTO Materia_has_dias_clase(N_idCurso, N_idDiasClase) VALUES (?, ?);",
-			idCurso,
-			nIdDias,
-		)
-		if err != nil {
-			tx.Rollback()
-			log.Printf("Database error: %v", err)
-			c.JSON(500, gin.H{"error": "Error en tercer query"})
-			return
-		}
-		_, err = tx.Exec(
-			"INSERT INTO horario (N_idUsuario, N_idCurso, N_idPeriodoAcademico) VALUES (?, ?,?);",
-			reminderNewValue.N_iduser,
-			idCurso,
-			reminderNewValue.Id_AcademicPeriod)
-		if err != nil {
-			tx.Rollback()
-			log.Printf("Database error: %v", err)
-			c.JSON(500, gin.H{"error": "Error en cuarto query"})
-			return
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			log.Printf("Commit error: %v", err)
-			c.JSON(500, gin.H{"error": "Internal server error"})
+		if rowsAffected == 0 {
+			c.JSON(404, gin.H{"error": "Personal schedule not found"})
 			return
 		}
 	*/
+	descripcion := "Se creó actividad personal: " + personalNewValue.P_nombreCurso
+
+	insertarLog(
+		personalNewValue.P_usuario,
+		"CREAR_ACTIVIDAD_PERSONAL",
+		descripcion,
+	)
 	c.JSON(200, gin.H{
-		"message": "Actividad creada correctamente",
+		"message":      "Actividad creada correctamente",
+		"new_activity": newActId,
 	})
 }
 
-// Get tipo cursos
+// Get tipo cursos QUERDE AQUIIIIIIIIIIIIIIIII ES DIFERENTE ES OTRO GET
 func GetTiposCurso(c *gin.Context) {
 
 	/*
@@ -409,7 +339,24 @@ func GetTiposCurso(c *gin.Context) {
 			B_isDeleted   int  `json:"B_isDeleted"`
 		}
 	*/
+	//	Consulta a redis
+	val, err := rdb.Get(c.Request.Context(), "CourseType").Result()
 
+	if err == nil {
+		fmt.Printf("\n Si existe registro")
+		var tiposCursoArray []TipoCurso
+
+		err := json.Unmarshal([]byte(val), &tiposCursoArray)
+
+		if err == nil {
+			c.JSON(200, tiposCursoArray)
+			return
+
+		}
+
+	}
+
+	// Si no existe en redis, se debe crear la consulta
 	rows, err := db.Query("SELECT * FROM TipoCurso")
 
 	if err != nil {
@@ -446,5 +393,6 @@ func GetTiposCurso(c *gin.Context) {
 		return
 	}
 
+	// Devuelve la consulta de la base relacional
 	c.JSON(200, tiposCursoArray)
 }
