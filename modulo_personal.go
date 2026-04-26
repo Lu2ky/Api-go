@@ -75,23 +75,6 @@ func getPersonalScheduleByUserId(c *gin.Context) {
 
 	}
 
-	// Convertir a formato apto para redis
-	data, err := json.Marshal(perschedules)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Error al serializar datos"})
-		return
-	}
-	// Guardar datos en redis
-	err3 := rdb.Set(ctx, "PersonalSchedule:"+id, data, 48*time.Hour).Err()
-
-	if err3 != nil {
-		log.Printf("Error al guardar en Redis: %v", err3)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error interno al guardar en caché",
-		})
-		return
-	}
-
 	// Devuelve la consulta de la base relacional
 	c.JSON(200, perschedules)
 }
@@ -410,23 +393,6 @@ func GetTiposCurso(c *gin.Context) {
 	if err = rows.Err(); err != nil {
 		log.Printf("Rows error: %v", err)
 		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
-		return
-	}
-
-	// Convertir a formato apto para redis
-	data, err := json.Marshal(tiposCursoArray)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Error al serializar datos"})
-		return
-	}
-	// Guardar datos en redis
-	err2 := rdb.Set(ctx, "CourseType", data, 48*time.Hour).Err()
-
-	if err2 != nil {
-		log.Printf("Error al guardar en Redis: %v", err2)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error interno al guardar en caché",
-		})
 		return
 	}
 

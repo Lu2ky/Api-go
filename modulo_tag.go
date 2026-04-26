@@ -78,23 +78,6 @@ func GetTagsByUserId(c *gin.Context) {
 		return
 	}
 
-	// Convertir a formato apto para redis
-	data, err := json.Marshal(TagsArray)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Error al serializar datos"})
-		return
-	}
-	// Guardar datos en redis
-	err2 := rdb.Set(ctx, "TagsByUser:"+id, data, 48*time.Hour).Err()
-
-	if err2 != nil {
-		log.Printf("Error al guardar en Redis: %v", err2)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error interno al guardar en caché",
-		})
-		return
-	}
-
 	// Devuelve la consulta de la base relacional
 	c.JSON(200, TagsArray)
 }
@@ -171,23 +154,6 @@ func GetTagsByUserIdAndReminderId(c *gin.Context) {
 	if err = rows.Err(); err != nil {
 		log.Printf("Rows error: %v", err)
 		c.JSON(500, gin.H{"error": "Error leyendo resultados"})
-		return
-	}
-
-	// Convertir a formato apto para redis
-	data, err := json.Marshal(TagsArray)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Error al serializar datos"})
-		return
-	}
-	// Guardar datos en redis
-	err2 := rdb.Set(ctx, key, data, 48*time.Hour).Err()
-
-	if err2 != nil {
-		log.Printf("Error al guardar en Redis: %v", err2)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error interno al guardar en caché",
-		})
 		return
 	}
 
