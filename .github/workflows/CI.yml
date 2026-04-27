@@ -58,7 +58,7 @@ jobs:
         run: go test ./...
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Validate Docker build
         uses: docker/build-push-action@v6
@@ -84,7 +84,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Resolve image tags
         id: tags
