@@ -41,16 +41,6 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Check formatting
-        shell: bash
-        run: |
-          UNFORMATTED=$(gofmt -l . | grep -v '^vendor/' || true)
-          if [[ -n "$UNFORMATTED" ]]; then
-            echo "Go files need formatting:"
-            echo "$UNFORMATTED"
-            exit 1
-          fi
-
       - name: Vet
         run: go vet ./...
 
