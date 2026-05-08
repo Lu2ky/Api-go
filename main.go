@@ -54,7 +54,6 @@ func main() {
 	router := gin.Default()
 	router.Use(apiKeyAuth())
 
-	registerLegacyRoutes(router)
 	v1 := router.Group("/api/v1")
 	registerV1Routes(v1)
 
@@ -63,61 +62,7 @@ func main() {
 	//router.Run(":8080")
 }
 
-func registerLegacyRoutes(router gin.IRoutes) {
-	// Actividades oficiales
-	router.GET("/GetOfficialScheduleByUserId/:id", getOfficialScheduleByUserId)
-	router.POST("/GetActivityTimesData", getActivitiesTimesData)
-	router.GET("/GetAcademicPeriods", getAcademicPeriods)
 
-	// Comentarios
-	router.GET("/GetPersonalComments/:id", getPersonalCommentsByUserId)
-	router.GET("/GetPersonalCourseComments/:id/:idCourse", getPersonalCommentsByUserIdAndCourseId)
-	router.POST("/addPersonalComment", addPersonalComment)
-	router.POST("/updatePersonalComment", updatePersonalComment)
-	router.POST("/deletePersonalComment", deletePersonalComment)
-
-	// Actividades personales
-	router.GET("/GetPersonalScheduleByUserId/:id", getPersonalScheduleByUserId)
-	router.POST("/addPersonalActivity", addPersonalActivity)
-	router.POST("/updatePersonalScheduleByIdCourse", updatePersonalScheduleByIdCourse)
-	router.POST("/deleteOrRecoveryPersonalScheduleByIdCourse", deleteOrRecoveryPersonalScheduleByIdCourse)
-	router.GET("/GetTiposCurso", GetTiposCurso)
-
-	// Etiquetas
-	router.GET("/GetTagsByUserId/:id", GetTagsByUserId)
-	router.GET("/GetTagsByUserIdAndReminderId/:id/:reminderId", GetTagsByUserIdAndReminderId)
-	router.POST("/deleteTag", deleteTag)
-
-	// Recordatorios
-	router.GET("/GetReminders/:id", GetRemindersByUserId)
-	router.GET("/GetRemindersTags/:id", GetRemindersTagsByUserId)
-	router.POST("/addReminder", addReminder)
-	router.POST("/updateReminder", updateReminderById)
-	router.POST("/deleteOrRecoverReminder", deleteOrRecoverReminder)
-
-	// Notificaciones y correos
-	router.GET("/GetNotifications/:id", GetNotificaciones)
-	router.POST("/addNotification", addNotificacion)
-	router.POST("/muteNotification", muteNotification)
-	router.POST("/addCorreo", addCorreo)
-
-	// Importar horario
-	router.POST("/importSchedule", importSchedule)
-
-	// Configuración de usuario
-	router.GET("/GetUserInfo/:id", GetUserInfo)
-
-	// LDAP
-	router.POST("/auth", Auth)
-	router.POST("/addauthuser", createUser)
-	router.POST("/addadmin", createAdmin)
-	router.POST("/changepassword", changeusrpasswd)
-
-	// Token
-	router.POST("/receiveTokenData", receiveTokenData)
-	router.POST("/getToken", getToken)
-
-}
 
 func registerV1Routes(router gin.IRouter) {
 
@@ -203,7 +148,3 @@ func registerV1Routes(router gin.IRouter) {
 	router.POST("/tokens/get", getToken)
 
 }
-
-func method(c *gin.Context) {}
-
-// c *gin.Context essential for method in GET/POST actions
