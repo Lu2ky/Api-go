@@ -85,10 +85,10 @@ func updatePersonalScheduleByIdCourse(c *gin.Context) {
 
 	/*
 		BindJSON() se encarga de tomar el body request de la petición y lo convierte en una estructura de GO
-		Aquí es importante que el JSON del body tenga los mismos campos ya definidos, en este caso, en PersonalScheduleNewValue
+		Aquí es importante que el JSON del body tenga los mismos campos ya definidos, en este caso, en EditPersonalActivity
 		También retorna un error en caso de haber uno.
 
-		Se usa como argumento &newValue para darle la dirección de memoria de la estructura GO y así almacenar la info.
+		Se usa como argumento &personalNewValue para darle la dirección de memoria de la estructura GO y así almacenar la info.
 	*/
 
 	//	Se asignan los valores el JSON a la estructura reminderNewValue

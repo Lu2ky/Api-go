@@ -121,12 +121,6 @@ type DelTag struct {
 	P_usuario    int     `json:"P_usuario"`
 	CodUsuario   *string `json:"codUsuario"`
 }
-type PersonalScheduleNewValue struct {
-	NewActivityValue   string  `json:"NewActivityValue" binding:"required"`
-	IdPersonalSchedule int     `json:"IdPersonalSchedule" binding:"required"`
-	CodUsuario         *string `json:"codUsuario"`
-	N_idUsuario        int     `json:"N_idUsuario"`
-}
 type forDeleteOrRecoveryPersonalSchedule struct {
 	IdPersonalSchedule int     `json:"IdPersonalSchedule" binding:"required"`
 	CodUsuario         *string `json:"codUsuario"`
