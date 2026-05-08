@@ -220,7 +220,7 @@ func (j JWTManager) validateTokenPublic(c *gin.Context) {
 func dialLDAPS() (*ldap.Conn, error) {
 	return ldap.DialURL("ldaps://"+os.Getenv("LDAP_ADDR")+":636",
 		ldap.DialWithTLSConfig(&tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: false,
 		}),
 	)
 }
