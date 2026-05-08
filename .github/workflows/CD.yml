@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - Testing
+      - main
     tags:
       - "v*.*.*"
   workflow_dispatch:
@@ -15,7 +15,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: lu2ky/apigohe
+  IMAGE_NAME: lu2ky/internalapi
 
 jobs:
   ci:
